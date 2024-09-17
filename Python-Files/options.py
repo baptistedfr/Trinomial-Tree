@@ -55,7 +55,7 @@ class EuropeanPutOption(PutOption):
     
     def compute_BS(self):
         div_rate = self.market.dividende/self.market.spot
-        return -self.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(-self.d1) + self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(-self.d2)
+        return -self.market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(-self.d1) + self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(-self.d2)
 
 class AmericanCallOption(CallOption):
     pass
@@ -70,12 +70,6 @@ class BermudeanPutOption(PutOption):
     exercise_dates : list[datetime]
 
 
-market = Market(spot=100, volatility=0.2, rate=0.01, dividende=0)
-eu = EuropeanCallOption(market= market, strike=100, time_to_maturity=1)
-print(eu.compute_BS())
-print(eu.compute_MC(100000))
 
-price_tree=random.uniform(eu.compute_BS()-0.1, eu.compute_BS()+0.1)
 
-print('Trinomial Tree ', price_tree)
 
