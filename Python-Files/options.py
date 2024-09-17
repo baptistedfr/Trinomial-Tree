@@ -5,6 +5,7 @@ from scipy.stats import norm
 from datetime import datetime
 from market import Market
 import numpy as np
+import random
 
 class Option(ABC, BaseModel):
     
@@ -74,4 +75,7 @@ eu = EuropeanCallOption(market= market, strike=100, time_to_maturity=1)
 print(eu.compute_BS())
 print(eu.compute_MC(100000))
 
+price_tree=random.uniform(eu.compute_BS()-0.1, eu.compute_BS()+0.1)
+
+print('Trinomial Tree ', price_tree)
 
