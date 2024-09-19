@@ -13,6 +13,8 @@ class Option(ABC, BaseModel):
     strike : float
     time_to_maturity : float
     start_date : datetime = None
+    div_date : datetime = None
+    dividende : float = None
 
     @computed_field
     @property
@@ -48,7 +50,7 @@ class PutOption(Option):
 class EuropeanCallOption(CallOption):
     
     def compute_BS(self) -> float:
-        div_rate = self.market.dividende/self.market.spot
+        div_rate = self.dividende/self.market.spot
         return self.market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(self.d1) - self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(self.d2)
 
 class EuropeanPutOption(PutOption):
