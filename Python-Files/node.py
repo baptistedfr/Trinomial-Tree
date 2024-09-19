@@ -33,7 +33,4 @@ class Node(BaseModel):
 
         self.p_down = ((pow(next_mid_price,-2) * (variance + pow(expectation,2)))- 1 - ((alpha+1) * ((pow(next_mid_price, -1)*expectation)-1))) / ((1 - alpha) * (pow(alpha,-2) - 1))
         self.p_up = ((pow(next_mid_price,-1)*expectation)-1-((alpha**(-1)-1)*self.p_down))/(alpha-1)
-
-        # self.p_down = (exp(time_delta * pow(vol, 2)) - 1) / ((1-alpha) * (pow(alpha, -2) - 1))
-        # self.p_up = self.p_down / alpha
         self.p_mid = 1 - self.p_down - self.p_up

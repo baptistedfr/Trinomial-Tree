@@ -1,11 +1,10 @@
-from abc import ABC
 from pydantic import BaseModel, computed_field
 from math import log, sqrt, exp
-from scipy.stats import norm
 from datetime import datetime
+from scipy.stats import norm
 from market import Market
+from abc import ABC
 import numpy as np
-import random
 
 class Option(ABC, BaseModel):
     
@@ -70,8 +69,3 @@ class BermudeanCallOption(CallOption):
 
 class BermudeanPutOption(PutOption):
     exercise_dates : list[datetime]
-
-
-
-
-
