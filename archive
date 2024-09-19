@@ -1,0 +1,28 @@
+def build_triplet_recursif(self, node : Node, current_step : int, position_from : str = "mid"):
+        # Condition d'arrêt : si on a atteint le dernier niveau, on retourne
+        if current_step >= self.nb_steps:
+            return    
+        next_mid_price = node.price * exp(self.option.market.rate * self.time_delta)
+        if position_from == "mid":
+            node.next_mid = Node(price = next_mid_price)
+            node.next_up = Node(price = next_mid_price * self.alpha)
+            node.next_down = Node(price = next_mid_price / self.alpha)   
+        elif position_from == "up":
+            node.next_mid = node.down_node.next_up #Si c est un noeud du haut alors le milieu est le noeud haut du noeud milieu précédent
+            node.next_up = Node(price = next_mid_price * self.alpha)
+            node.next_down = node.down_node.next_mid # Le bas du haut equivaut au milieu du milieu précédent
+
+        elif position_from == "down":
+            node.next_mid = node.up_node.next_down #Si c est un noeud du bas alors le milieu est le noeud bas du noeud milieu précédent
+            node.next_up = node.up_node.next_mid # Le haut du bas correspond au milieu du milieu
+            node.next_down = Node(price = next_mid_price / self.alpha) 
+    
+        node.next_up.down_node = node.next_mid
+        node.next_down.up_node = node.next_mid
+        # Appel récursif pour construire les sous-arbres à partir de chaque enfant
+        self.build_triplet(node = node.next_mid, current_step=current_step + 1, position_from="mid")
+        self.build_triplet(node = node.next_up, current_step=current_step + 1, position_from="up")
+        self.build_triplet(node = node.next_down, current_step=current_step + 1, position_from="down")  
+        # Fonction pour visualiser l'arbre
+        # Nouvelle fonction de tracé
+        # Visualisation de l'arbre avec NetworkX
