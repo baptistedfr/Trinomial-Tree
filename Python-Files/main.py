@@ -1,14 +1,15 @@
-from market import Market
-from options import EuropeanCallOption
+from options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
 from visualisation import visualize_tree
 from datetime import datetime
+from market import Market
 from tree import Tree
 import time
 
-nb_steps = 1000
+nb_steps = 100
 market = Market(spot=100, rate=0.05, volatility=0.2)
-# option = EuropeanCallOption(market=market, time_to_maturity=1, strike=105)
-option = EuropeanCallOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=3)
+option = EuropeanPutOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0)
+# option = AmericanPutOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0)
+# option = BermudeanPutOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0, exercise_dates=[datetime(2024,4,1), datetime(2024,8,1)])
 tree = Tree(option=option, nb_steps=nb_steps)
 
 def generate_and_price(visualise : bool = False):
@@ -24,7 +25,7 @@ def generate_and_price(visualise : bool = False):
     print(f"Option priced in : {round(time.time()-start,5)} sec")
 
     print(f"Option price with tree : {tree.root_node.payoff}")
-    print(f"Option price with B&S: {option.compute_BS()}")
+    print(f"Option price with B&S (or MC): {option.compute_price()}")
     
     if visualise:
         visualize_tree(tree)

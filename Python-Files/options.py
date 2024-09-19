@@ -28,7 +28,7 @@ class Option(ABC, BaseModel):
         return self.d1 - self.market.volatility*sqrt(self.time_to_maturity)
     
     
-    def compute_MC(self,n_sim):
+    def compute_price(self,n_sim=100000):
         Z = np.random.normal(0, 1, n_sim)
         prices = self.market.spot * np.exp(
             (self.market.rate - 0.5 * pow(self.market.volatility, 2)) * self.time_to_maturity +
@@ -49,13 +49,13 @@ class PutOption(Option):
     
 class EuropeanCallOption(CallOption):
     
-    def compute_BS(self) -> float:
+    def compute_price(self) -> float:
         div_rate = self.dividende/self.market.spot
         return self.market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(self.d1) - self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(self.d2)
 
 class EuropeanPutOption(PutOption):
     
-    def compute_BS(self):
+    def compute_price(self):
         div_rate = self.market.dividende/self.market.spot
         return -self.market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(-self.d1) + self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(-self.d2)
 

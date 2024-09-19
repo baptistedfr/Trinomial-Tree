@@ -1,4 +1,4 @@
-from options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption
+from options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
 from pydantic import BaseModel, computed_field
 from math import exp, sqrt, ceil
 from typing import Union
@@ -6,7 +6,7 @@ from node import Node
 
 class Tree(BaseModel):
    
-    option : Union[EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption]
+    option : Union[EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption]
     nb_steps : int
     root_node : Node = None
     last_node : Node = None
@@ -24,9 +24,25 @@ class Tree(BaseModel):
     @computed_field
     @property
     def div_step(self) -> float:
+
         time_delta_in_days = self.time_delta * 356
         return ceil((self.option.div_date - self.option.start_date).days/time_delta_in_days)
     
+    @computed_field
+    @property
+    def exercise_steps(self) -> list[int]:
+
+        if isinstance(self.option, BermudeanCallOption) or isinstance(self.option, BermudeanPutOption):
+            exercise_dates = self.option.exercise_dates
+            time_delta_in_days = self.time_delta * 356
+            return [ceil((ex_date - self.option.start_date).days/time_delta_in_days) for ex_date in exercise_dates]
+        
+        elif isinstance(self.option, AmericanCallOption) or isinstance(self.option, AmericanPutOption):
+            return [i for i in range(self.nb_steps)]
+        
+        else:
+            return []
+        
     def generate_tree(self):
 
         self.root_node = Node(price = self.option.market.spot)
@@ -92,9 +108,7 @@ class Tree(BaseModel):
 
         return down_node.down_node
     
-    def _compute_final_payoff(self, end_node_up : Node):
-        """Price the last column according to the option payoff"""
-        
+    def _compute_final_payoff(self, end_node_up : Node):        
         end_node_down = end_node_up
         while end_node_up is not None:
             end_node_up.payoff = self.option.payoff(end_node_up.price)
@@ -102,19 +116,26 @@ class Tree(BaseModel):
             end_node_up = end_node_up.up_node
             end_node_down = end_node_down.down_node
     
-    def _compute_retro_payoff(self, node : Node):
+    def _compute_retro_payoff(self, node : Node, step : int):
         if node.payoff is None:
-            node.compute_proba(self.alpha, self.time_delta, self.option)
-            expectation = node.next_down.payoff * node.p_down + node.next_up.payoff * node.p_up + node.next_mid.payoff * node.p_mid  
-            node.payoff = expectation * exp(-self.option.market.rate * self.time_delta)
 
-    def _retro_payoff(self, trunc_node : Node):
+            node.compute_proba(self.alpha, self.time_delta, self.option)
+            expectation = node.next_down.payoff * node.p_down + node.next_up.payoff * node.p_up + node.next_mid.payoff * node.p_mid
+            retro_payoff = expectation * exp(-self.option.market.rate * self.time_delta)
+
+            if step in self.exercise_steps:
+                exercise_payoff = self.option.payoff(node.price)
+                node.payoff = max(retro_payoff, exercise_payoff)
+            else:
+                node.payoff = retro_payoff
+
+    def _retro_payoff(self, trunc_node : Node, step : int):
         
         this_up = trunc_node
         this_down = trunc_node
         while this_up is not None:
-            self._compute_retro_payoff(this_up)
-            self._compute_retro_payoff(this_down)
+            self._compute_retro_payoff(this_up, step)
+            self._compute_retro_payoff(this_down, step)
             this_up = this_up.up_node
             this_down =this_down.down_node
 
@@ -123,7 +144,9 @@ class Tree(BaseModel):
         last_node = self.last_node
         self._compute_final_payoff(last_node)
 
+        step = self.nb_steps - 1
         trunc_node = last_node.prec_node
         while trunc_node is not None:
-            self._retro_payoff(trunc_node)
+            self._retro_payoff(trunc_node, step)
             trunc_node = trunc_node.prec_node
+            step-=1
