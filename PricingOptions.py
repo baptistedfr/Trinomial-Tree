@@ -1,44 +1,66 @@
 import xlwings as xw
-from option import CallOption, PutOption
-from tree import Tree
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
+from PythonFiles.market import Market
+from PythonFiles.tree import Tree
+from datetime import datetime
 from abc import ABC,abstractmethod
 from math import log,sqrt,exp,floor
 from re import T
 from scipy.stats import norm
-import xlwings as xw
 import time
 
 def main():
+    
     wb = xw.Book.caller()
     sheet_pricer = wb.sheets["Pricer"]
-    type_option: str = sheet_pricer.range("OptionType").value
-    exercise_type: float = sheet_pricer.range('ExerciceType').value
-    initial_price: float = sheet_pricer.range('IntialPrice').value
-    strike: float = sheet_pricer.range('Strike').value
-    volatility: float = sheet_pricer.range('Volatility').value
-    maturity: float = sheet_pricer.range('Maturity').value
-    risk_free_rate: float = sheet_pricer.range('InterestRate').value
 
-    nb_steps: float = sheet_pricer.range('NbSteps').value
-    is_american: bool = False
-    if (exercise_type == "US"):
-        is_american = True
-    
-    if type_option == "Call":
-        option = CallOption(spot=initial_price, strike=strike, risk_free_rate=risk_free_rate, time_to_maturity=maturity, volatility=volatility, is_american=is_american)
+    # Paramètres du marché
+    initial_price: float = sheet_pricer.range('IntialPrice').value
+    volatility: float = sheet_pricer.range('Volatility').value
+    risk_free_rate: float = sheet_pricer.range('InterestRate').value
+    dividende: float = sheet_pricer.range('Dividend').value
+    if (dividende >0):
+        div_date: datetime = sheet_pricer.range('DivDate').value
+        market = Market(spot=initial_price, volatility=volatility, rate=risk_free_rate, dividende=dividende, div_date=div_date)
     else:
-        option=PutOption(spot=initial_price, strike=strike, risk_free_rate=risk_free_rate, time_to_maturity=maturity, volatility=volatility, is_american=is_american)
-    
+        market = Market(spot=initial_price, volatility=volatility, rate=risk_free_rate, dividende=dividende)
+
+
+    # Paramètres de l'option
+    type_option: str = sheet_pricer.range('OptionType').value
+    exercise_type: float = sheet_pricer.range('ExerciceType').value
+    strike: float = sheet_pricer.range('Strike').value
+    maturity: float = sheet_pricer.range('Maturity').value
+    start_date: datetime = sheet_pricer.range('StartDate').value
+
+    option_class_name = f"{exercise_type}{type_option}Option"
+    option_class = globals().get(option_class_name)
+    if option_class: #Liste des dates non prises en compte pour l'instant pour les bermudéennes
+        option = option_class(market=market, strike=strike, time_to_maturity=maturity, start_date=start_date)
+    else:
+        raise ValueError(f"Classe d'option {option_class_name} non trouvée dans le module PythonFiles.options.")
+
+    # Paramètres du tree
+    nb_steps: float = sheet_pricer.range('NbSteps').value
+
+    # On instance l'abre
     start_time = time.time()
     tree = Tree(option=option, nb_steps=nb_steps)
-    tree.generate_tree()
-    option_price = tree.price_tree()
-    exec_time = time.time() - start_time
+    print(f"Number of steps : {nb_steps}")
 
-    sheet_pricer.range("PyBSPrice").value = option.bs_price()
-    sheet_pricer.range("PyTreePrice").value = option_price  # Fix the method call here
-    sheet_pricer.range("PyExecutionTime").value = exec_time
+    start=time.time()
+    tree.generate_tree()
+    tree.price()
+    tree_time = time.time() - start
+    sheet_pricer.range('TreePricePython').value = tree.root_node.payoff
+    sheet_pricer.range('TreeTimePython').value = tree_time
+
+    start=time.time()
+    bs_price = option.compute_price()
+    bs_time = time.time() - start
+    sheet_pricer.range('BSPricePython').value = bs_price
+    sheet_pricer.range('BSTimePython').value = bs_time
     
 if __name__ == "__main__":
-    xw.Book.caller().set_mock_caller()
+    xw.Book("PricingOptions.xlsm").set_mock_caller()
     main()

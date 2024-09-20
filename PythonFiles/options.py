@@ -2,7 +2,7 @@ from pydantic import BaseModel, computed_field
 from math import log, sqrt, exp
 from datetime import datetime
 from scipy.stats import norm
-from market import Market
+from PythonFiles.market import Market
 from abc import ABC
 import numpy as np
 

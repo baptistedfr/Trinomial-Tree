@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from options import Option
+from PythonFiles.options import Option
 from math import exp
 
 class Node(BaseModel):

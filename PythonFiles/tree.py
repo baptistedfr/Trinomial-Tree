@@ -1,8 +1,9 @@
-from options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
 from pydantic import BaseModel, computed_field
 from math import exp, sqrt, ceil
 from typing import Union
-from node import Node
+from PythonFiles.node import Node
+from tqdm import tqdm
 
 class Tree(BaseModel):
    
@@ -24,9 +25,11 @@ class Tree(BaseModel):
     @computed_field
     @property
     def div_step(self) -> float:
-
-        time_delta_in_days = self.time_delta * 356
-        return ceil((self.option.market.div_date - self.option.start_date).days/time_delta_in_days)
+        if self.option.market.dividende <= 0:
+            return -1
+        else:
+            time_delta_in_days = self.time_delta * 356
+            return ceil((self.option.market.div_date - self.option.start_date).days/time_delta_in_days)
     
     @computed_field
     @property
@@ -48,13 +51,14 @@ class Tree(BaseModel):
         self.root_node = Node(price = self.option.market.spot)
         mid_node = self.root_node
 
-        # for _ in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
-        #     mid_node = self._build_column(mid_node)
-
-        for step in range(self.nb_steps-1):
+        for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
             is_div = True if step == self.div_step else False
-
             mid_node = self._build_column(mid_node, is_div)
+
+        # for step in range(self.nb_steps-1):
+        #     is_div = True if step == self.div_step else False
+
+        #     mid_node = self._build_column(mid_node, is_div)
 
         self.last_node = mid_node
     
