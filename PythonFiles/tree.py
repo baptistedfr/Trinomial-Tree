@@ -26,7 +26,7 @@ class Tree(BaseModel):
     def div_step(self) -> float:
 
         time_delta_in_days = self.time_delta * 356
-        return ceil((self.option.div_date - self.option.start_date).days/time_delta_in_days)
+        return ceil((self.option.market.div_date - self.option.start_date).days/time_delta_in_days)
     
     @computed_field
     @property
@@ -73,7 +73,7 @@ class Tree(BaseModel):
 
     def _build_triplet(self, node : Node, is_div : bool):
         
-        node.next_mid = node.calculate_forward_node(self.option.market.rate, self.time_delta, self.option.dividende, is_div)
+        node.next_mid = node.calculate_forward_node(self.option.market.rate, self.time_delta, self.option.market.dividende, is_div)
         node.next_up = Node(price = node.next_mid.price * self.alpha)
         node.next_down = Node(price = node.next_mid.price / self.alpha)
 
