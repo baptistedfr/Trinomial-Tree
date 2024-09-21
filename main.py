@@ -1,8 +1,8 @@
-from options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
-from visualisation import visualize_tree
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
+from PythonFiles.visualisation import visualize_tree
 from datetime import datetime
-from market import Market
-from tree import Tree
+from PythonFiles.market import Market
+from PythonFiles.tree import Tree
 import time
 
 nb_steps = 500

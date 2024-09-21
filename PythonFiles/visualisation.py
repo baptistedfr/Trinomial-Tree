@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from tree import Tree
+from PythonFiles.tree import Tree
 import networkx as nx
 
 def visualize_tree(tree : Tree):
