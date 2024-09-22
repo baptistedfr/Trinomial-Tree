@@ -1,8 +1,10 @@
 from pydantic import BaseModel
 from PythonFiles.options import Option
 from math import exp
+from dataclasses import dataclass
 
-class Node(BaseModel):
+@dataclass
+class Node():
     
     price : float
     payoff : float = None

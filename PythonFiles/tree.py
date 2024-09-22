@@ -4,8 +4,10 @@ from math import exp, sqrt, ceil
 from typing import Union
 from PythonFiles.node import Node
 from tqdm import tqdm
+from dataclasses import dataclass
 
-class Tree(BaseModel):
+@dataclass
+class Tree():
    
     option : Union[EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption]
     nb_steps : int

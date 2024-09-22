@@ -5,8 +5,10 @@ from scipy.stats import norm
 from PythonFiles.market import Market
 from abc import ABC
 import numpy as np
+from dataclasses import dataclass
 
-class Option(ABC, BaseModel):
+@dataclass
+class Option(ABC):
     
     market : Market
     strike : float
