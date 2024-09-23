@@ -1,14 +1,11 @@
-from pydantic import BaseModel
 from PythonFiles.options import Option
 from math import exp
 from dataclasses import dataclass
 
 @dataclass
 class Node():
-    
     price : float
     payoff : float = None
-    
     next_up : 'Node' = None
     next_mid : 'Node' = None
     next_down : 'Node' = None
@@ -19,6 +16,7 @@ class Node():
     p_down : float = None
     p_up : float = None
     p_mid : float = None
+
     
     def calculate_forward_node(self, rate : float, delta_time : float, dividende : float, is_div : bool):
         if is_div:

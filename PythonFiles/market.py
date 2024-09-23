@@ -1,10 +1,9 @@
-from abc import ABC
-from pydantic import BaseModel
 from datetime import datetime
 from dataclasses import dataclass
 
 @dataclass
 class Market():
+    
     spot : float
     volatility : float
     rate : float

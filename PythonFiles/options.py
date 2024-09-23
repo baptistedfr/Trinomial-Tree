@@ -1,27 +1,28 @@
-from pydantic import BaseModel, computed_field
 from math import log, sqrt, exp
 from datetime import datetime
 from scipy.stats import norm
 from PythonFiles.market import Market
 from abc import ABC
 import numpy as np
-from dataclasses import dataclass
 
-@dataclass
+
 class Option(ABC):
     
-    market : Market
-    strike : float
-    time_to_maturity : float
-    start_date : datetime = None
+    def __init__(self,market, strike, time_to_maturity, start_date):
+        self.market = market
+        self.strike = strike
+        self.time_to_maturity = time_to_maturity
+        self.start_date = start_date
+    # market : Market
+    # strike : float
+    # time_to_maturity : float
+    # start_date : datetime = None
 
-    @computed_field
     @property
     def d1(self) -> float:
         div_rate = self.market.dividende/self.market.spot
         return (log(self.market.spot/self.strike) + self.time_to_maturity * (self.market.rate - div_rate + (pow(self.market.volatility, 2)/2)))/(self.market.volatility * sqrt(self.time_to_maturity))
     
-    @computed_field
     @property
     def d2(self) -> float:
         return self.d1 - self.market.volatility*sqrt(self.time_to_maturity)

@@ -1,10 +1,10 @@
 from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
-from pydantic import BaseModel, computed_field
 from math import exp, sqrt, ceil
 from typing import Union
 from PythonFiles.node import Node
 from tqdm import tqdm
 from dataclasses import dataclass
+from functools import cached_property
 
 @dataclass
 class Tree():
@@ -14,27 +14,23 @@ class Tree():
     root_node : Node = None
     last_node : Node = None
 
-    @computed_field
-    @property
+    @cached_property
     def time_delta(self) -> float:
         return self.option.time_to_maturity / self.nb_steps    
 
-    @computed_field
-    @property
+    @cached_property
     def alpha(self) -> float:
         return exp(self.option.market.volatility * sqrt(3 * self.time_delta)  )
-    
-    @computed_field
-    @property
+
+    @cached_property
     def div_step(self) -> float:
         if self.option.market.dividende <= 0:
             return -1
         else:
             time_delta_in_days = self.time_delta * 356
             return ceil((self.option.market.div_date - self.option.start_date).days/time_delta_in_days)
-    
-    @computed_field
-    @property
+
+    @cached_property
     def exercise_steps(self) -> list[int]:
 
         if isinstance(self.option, BermudeanCallOption) or isinstance(self.option, BermudeanPutOption):
@@ -53,14 +49,14 @@ class Tree():
         self.root_node = Node(price = self.option.market.spot)
         mid_node = self.root_node
 
-        for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
-            is_div = True if step == self.div_step else False
-            mid_node = self._build_column(mid_node, is_div)
-
-        # for step in range(self.nb_steps-1):
+        # for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
         #     is_div = True if step == self.div_step else False
-
         #     mid_node = self._build_column(mid_node, is_div)
+
+        for step in range(self.nb_steps-1):
+            is_div = True if step == self.div_step else False
+
+            mid_node = self._build_column(mid_node, is_div)
 
         self.last_node = mid_node
     
