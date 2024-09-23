@@ -6,8 +6,8 @@ from PythonFiles.tree import Tree
 import time
 
 nb_steps = 1000
-market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=2)
-option = EuropeanPutOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1))
+market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
+option = EuropeanCallOption(market=market, time_to_maturity=1, strike=95, start_date=datetime(2024,1,1))
 # option = AmericanPutOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0)
 # option = BermudeanPutOption(market=market, time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0, exercise_dates=[datetime(2024,4,1), datetime(2024,8,1)])
 tree = Tree(option=option, nb_steps=nb_steps)
