@@ -10,29 +10,26 @@ from dataclasses import dataclass
 @dataclass
 class Option(ABC):
         
-    market : Market
     strike : float
     time_to_maturity : float
     start_date : datetime = None
 
-    @property
-    def d1(self) -> float:
-        div_rate = self.market.dividende/self.market.spot
-        return (log(self.market.spot/self.strike) + self.time_to_maturity * (self.market.rate - div_rate + (pow(self.market.volatility, 2)/2)))/(self.market.volatility * sqrt(self.time_to_maturity))
+    def d1(self, market) -> float:
+        div_rate = market.dividende/market.spot
+        return (log(market.spot/self.strike) + self.time_to_maturity * (market.rate - div_rate + (pow(market.volatility, 2)/2)))/(market.volatility * sqrt(self.time_to_maturity))
 
-    @property
-    def d2(self) -> float:
-        return self.d1 - self.market.volatility*sqrt(self.time_to_maturity)
+    def d2(self, market) -> float:
+        return self.d1(market) - market.volatility*sqrt(self.time_to_maturity)
     
     
-    def compute_price(self,n_sim=100000):
+    def compute_price(self,market, n_sim=100000):
         Z = np.random.normal(0, 1, n_sim)
-        prices = self.market.spot * np.exp(
-            (self.market.rate - 0.5 * pow(self.market.volatility, 2)) * self.time_to_maturity +
-            self.market.volatility * np.sqrt(self.time_to_maturity) * Z
+        prices = market.spot * np.exp(
+            (market.rate - 0.5 * pow(market.volatility, 2)) * self.time_to_maturity +
+            market.volatility * np.sqrt(self.time_to_maturity) * Z
         )
         payoffs=np.array([self.payoff(S) for S in prices])
-        return exp(-self.market.rate*self.time_to_maturity) * np.mean(payoffs)
+        return exp(-market.rate*self.time_to_maturity) * np.mean(payoffs)
 
 class CallOption(Option):
     
@@ -46,15 +43,15 @@ class PutOption(Option):
     
 class EuropeanCallOption(CallOption):
     
-    def compute_price(self) -> float:
-        div_rate = self.market.dividende/self.market.spot
-        return self.market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(self.d1) - self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(self.d2)
+    def compute_price(self, market) -> float:
+        div_rate = market.dividende/market.spot
+        return market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(self.d1(market)) - self.strike * exp(-market.rate*self.time_to_maturity)*norm.cdf(self.d2(market))
 
 class EuropeanPutOption(PutOption):
     
-    def compute_price(self):
-        div_rate = self.market.dividende/self.market.spot
-        return -self.market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(-self.d1) + self.strike * exp(-self.market.rate*self.time_to_maturity)*norm.cdf(-self.d2)
+    def compute_price(self, market):
+        div_rate = market.dividende/market.spot
+        return -market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(-self.d1(market)) + self.strike * exp(-market.rate*self.time_to_maturity)*norm.cdf(-self.d2(market))
 
 class AmericanCallOption(CallOption):
     pass

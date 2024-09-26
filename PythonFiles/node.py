@@ -1,4 +1,4 @@
-from PythonFiles.options import Option
+from PythonFiles.options import Market
 from math import exp
 from dataclasses import dataclass
 
@@ -25,10 +25,10 @@ class Node():
             forward_price = self.price * exp(rate * delta_time)
         return Node(price=forward_price)
     
-    def compute_proba(self, alpha : float, time_delta : int, option : Option):
+    def compute_proba(self, alpha : float, time_delta : int, market : Market):
 
         next_mid_price = self.next_mid.price
-        variance = pow(self.price,2) * exp(2 * option.market.rate * time_delta) * (exp(pow(option.market.volatility, 2) * time_delta) -1) 
+        variance = pow(self.price,2) * exp(2 * market.rate * time_delta) * (exp(pow(market.volatility, 2) * time_delta) -1) 
         expectation = self.next_mid.price
 
         self.p_down = ((pow(next_mid_price,-2) * (variance + pow(expectation,2)))- 1 - ((alpha+1) * ((pow(next_mid_price, -1)*expectation)-1))) / ((1 - alpha) * (pow(alpha,-2) - 1))

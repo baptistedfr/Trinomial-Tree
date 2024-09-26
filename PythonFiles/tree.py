@@ -5,30 +5,32 @@ from PythonFiles.node import Node
 from tqdm import tqdm
 from dataclasses import dataclass
 from functools import cached_property
+from PythonFiles.market import Market
 
 @dataclass
 class Tree():
    
     option : Union[EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption]
+    market : Market
     nb_steps : int
     root_node : Node = None
     last_node : Node = None
-
+    
     @cached_property
     def time_delta(self) -> float:
         return self.option.time_to_maturity / self.nb_steps    
 
     @cached_property
     def alpha(self) -> float:
-        return exp(self.option.market.volatility * sqrt(3 * self.time_delta)  )
+        return exp(self.market.volatility * sqrt(3 * self.time_delta)  )
 
     @cached_property
     def div_step(self) -> float:
-        if self.option.market.dividende <= 0:
+        if self.market.dividende <= 0:
             return -1
         else:
             time_delta_in_days = self.time_delta * 356
-            return ceil((self.option.market.div_date - self.option.start_date).days/time_delta_in_days)
+            return ceil((self.market.div_date - self.option.start_date).days/time_delta_in_days)
 
     @cached_property
     def exercise_steps(self) -> list[int]:
@@ -46,17 +48,17 @@ class Tree():
         
     def generate_tree(self):
 
-        self.root_node = Node(price = self.option.market.spot)
+        self.root_node = Node(price = self.market.spot)
         mid_node = self.root_node
 
-        # for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
-        #     is_div = True if step == self.div_step else False
-        #     mid_node = self._build_column(mid_node, is_div)
-
-        for step in range(self.nb_steps-1):
+        for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
             is_div = True if step == self.div_step else False
-
             mid_node = self._build_column(mid_node, is_div)
+
+        # for step in range(self.nb_steps-1):
+        #     is_div = True if step == self.div_step else False
+
+        #     mid_node = self._build_column(mid_node, is_div)
 
         self.last_node = mid_node
     
@@ -67,7 +69,7 @@ class Tree():
         upper_node = mid_node.up_node
         down_node = mid_node.down_node
 
-        while down_node != None and upper_node !=None:
+        while down_node is not None and upper_node is not None:
             upper_node = self._compute_upper_nodes(upper_node)
             down_node = self._compute_down_nodes(down_node)
             
@@ -75,7 +77,7 @@ class Tree():
 
     def _build_triplet(self, node : Node, is_div : bool):
         
-        node.next_mid = node.calculate_forward_node(self.option.market.rate, self.time_delta, self.option.market.dividende, is_div)
+        node.next_mid = node.calculate_forward_node(self.market.rate, self.time_delta, self.market.dividende, is_div)
         node.next_up = Node(price = node.next_mid.price * self.alpha)
         node.next_down = Node(price = node.next_mid.price / self.alpha)
 
@@ -121,9 +123,9 @@ class Tree():
     def _compute_retro_payoff(self, node : Node, step : int):
         if node.payoff is None:
 
-            node.compute_proba(self.alpha, self.time_delta, self.option)
+            node.compute_proba(self.alpha, self.time_delta, self.market)
             expectation = node.next_down.payoff * node.p_down + node.next_up.payoff * node.p_up + node.next_mid.payoff * node.p_mid
-            retro_payoff = expectation * exp(-self.option.market.rate * self.time_delta)
+            retro_payoff = expectation * exp(-self.market.rate * self.time_delta)
 
             if step in self.exercise_steps:
                 exercise_payoff = self.option.payoff(node.price)

@@ -9,6 +9,7 @@ from re import T
 from scipy.stats import norm
 import time
 
+
 def main():
     
     wb = xw.Book.caller()
@@ -41,7 +42,7 @@ def main():
         raise ValueError(f"Classe d'option {option_class_name} non trouvée dans le module PythonFiles.options.")
 
     # Paramètres du tree
-    nb_steps: float = sheet_pricer.range('NbSteps').value
+    nb_steps: int = int(sheet_pricer.range('NbSteps').value)
 
     # On instance l'abre
     start_time = time.time()
