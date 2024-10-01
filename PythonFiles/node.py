@@ -1,6 +1,6 @@
-from PythonFiles.options import Market
 from math import exp
 from dataclasses import dataclass
+from PythonFiles.market import Market
 
 @dataclass
 class Node():

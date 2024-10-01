@@ -1,4 +1,5 @@
-from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
+from PythonFiles.greeks import compute_greeks
 from PythonFiles.visualisation import visualize_tree
 from datetime import datetime
 from PythonFiles.market import Market
@@ -8,14 +9,13 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
+def generate_and_price(market, option, prunning, visualise : bool = False, greeks : bool = False):
 
-def generate_and_price(prunning, visualise : bool = False):
-    nb_steps = 10000
-    market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
-    option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
     tree = Tree(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
+    print("\n-----------------------------------------------")
     print(f"Number of steps : {nb_steps}")
 
+    print("\nPerformance :")
     start=time.time()
     tree.generate_tree()
     print(f"Tree generated in : {round(time.time()-start,5)} sec")
@@ -24,11 +24,15 @@ def generate_and_price(prunning, visualise : bool = False):
     tree.price()
     print(f"Option priced in : {round(time.time()-start,5)} sec")
 
+    print("\nPricing :")
     print(f"Option price with tree : {tree.root_node.payoff}")
-    print(f"Option price with B&S (or MC): {option.compute_price(market)}")
+    print(f"Option price with B&S or MC: {option.compute_price(market)}")
     
     if visualise:
         visualize_tree(tree)
+    if greeks:
+        compute_greeks(tree, market, option, nb_steps, prunning)
+    print("-----------------------------------------------")
 
 def analyse(nb_steps, market, option):
     tree = Tree(market = market, option=option, nb_steps=nb_steps, prunning_value=1e-10)
@@ -37,7 +41,6 @@ def analyse(nb_steps, market, option):
     tree.price()
     temps_exec = round(time.time()-start,5)
     return [tree.root_node.payoff, temps_exec]
-
 
 def generate_graphs():
     market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
@@ -102,5 +105,10 @@ def generate_graphs():
     plt.tight_layout()
     plt.show()
 
-generate_and_price(1e-14, False)
-print("End")
+nb_steps = 1000
+prunning = 1e-10
+
+market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
+option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
+
+generate_and_price(market=market, option=option, prunning=prunning, visualise=False, greeks=True)
