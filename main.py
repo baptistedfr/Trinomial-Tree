@@ -14,11 +14,8 @@ option = EuropeanCallOption(time_to_maturity=1, strike=95, start_date=datetime(2
 # option = AmericanPutOption(time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0)
 # option = BermudeanPutOption(time_to_maturity=1, strike=105, start_date=datetime(2024,1,1), div_date=datetime(2024,2,1), dividende=0, exercise_dates=[datetime(2024,4,1), datetime(2024,8,1)])
 
-def generate_and_price(visualise : bool = False):
-    # nb_steps = 10000
-    # market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
-    # option = EuropeanPutOption(time_to_maturity=1, strike=95, start_date=datetime(2024,1,1))
-    tree = Tree(market=market, option=option, nb_steps=nb_steps)
+def generate_and_price(prunning_value : float, visualise : bool = False):
+    tree = Tree(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
     print(f"Number of steps : {nb_steps}")
 
     start=time.time()
@@ -35,7 +32,7 @@ def generate_and_price(visualise : bool = False):
     if visualise:
         visualize_tree(tree)
 
-generate_and_price()
+generate_and_price(1e-10, False)
 print("End")
 
 # Ecart * Nb Step

@@ -16,7 +16,7 @@ class Tree():
     root_node : Node = None
     last_node : Node = None
     
-    prunning_value : float = 1e-100
+    prunning_value : float = None
 
     @cached_property
     def time_delta(self) -> float:
@@ -53,14 +53,13 @@ class Tree():
         self.root_node = Node(price = self.market.spot, node_proba = 1)
         mid_node = self.root_node
 
-        # for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
+        for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
+            is_div = True if step == self.div_step else False
+            mid_node = self._build_column(mid_node, is_div)
+
+        # for step in range(self.nb_steps-1):
         #     is_div = True if step == self.div_step else False
         #     mid_node = self._build_column(mid_node, is_div)
-
-        for step in range(self.nb_steps-1):
-            is_div = True if step == self.div_step else False
-
-            mid_node = self._build_column(mid_node, is_div)
 
         self.last_node = mid_node
     
@@ -71,9 +70,10 @@ class Tree():
         upper_node = mid_node.up_node
         down_node = mid_node.down_node
 
-        while down_node is not None and upper_node is not None:
-            upper_node = self._compute_upper_nodes(upper_node)
+        while down_node is not None:
             down_node = self._compute_down_nodes(down_node)
+        while upper_node is not None:
+            upper_node = self._compute_upper_nodes(upper_node)
             
         return mid_node.next_mid
 
@@ -113,6 +113,8 @@ class Tree():
 
             upper_node.next_up.down_node = upper_node.next_mid
             upper_node.next_mid.up_node = upper_node.next_up
+            
+            return upper_node.up_node
         else :
             #If prunning : monomial branching = 100% proba mid
             upper_node.p_mid = 1.0
@@ -120,8 +122,7 @@ class Tree():
             upper_node.p_up = 0.0
 
             upper_node.next_mid.node_proba += upper_node.node_proba * upper_node.p_mid
-
-        return upper_node.up_node
+            return None
 
     def _compute_down_nodes(self, down_node : Node):
         down_node.next_mid = down_node.up_node.next_down
@@ -140,6 +141,7 @@ class Tree():
             down_node.next_down.up_node = down_node.next_mid
             down_node.next_mid.down_node = down_node.next_down
 
+            return down_node.down_node
         else :
             #If prunning : monomial branching = 100% proba mid
             down_node.p_mid = 1.0
@@ -147,15 +149,19 @@ class Tree():
             down_node.p_up = 0.0
 
             down_node.next_mid.node_proba += down_node.node_proba * down_node.p_mid
-
-        return down_node.down_node
+            
+            return None
     
-    def _compute_final_payoff(self, end_node_up : Node):        
-        end_node_down = end_node_up
+    def _compute_final_payoff(self, trunc_node : Node):        
+        end_node_down = trunc_node
+        end_node_up = trunc_node
+
         while end_node_up is not None:
             end_node_up.payoff = self.option.payoff(end_node_up.price)
-            end_node_down.payoff = self.option.payoff(end_node_down.price)
             end_node_up = end_node_up.up_node
+            
+        while end_node_down is not None:
+            end_node_down.payoff = self.option.payoff(end_node_down.price)
             end_node_down = end_node_down.down_node
     
     def _compute_retro_payoff(self, node : Node, step : int):
