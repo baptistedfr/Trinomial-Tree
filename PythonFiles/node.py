@@ -17,6 +17,7 @@ class Node():
     p_up : float = None
     p_mid : float = None
 
+    node_proba : float = None
     
     def calculate_forward_node(self, rate : float, delta_time : float, dividende : float, is_div : bool):
         if is_div:
