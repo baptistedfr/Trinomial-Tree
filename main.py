@@ -9,11 +9,11 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 
-def generate_and_price(visualise : bool = False):
-    nb_steps = 10000
+def generate_and_price(prunning, visualise : bool = False):
+    nb_steps = 1000
     market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
-    option = EuropeanPutOption(time_to_maturity=1, strike=95, start_date=datetime(2024,1,1))
-    tree = Tree(market=market, option=option, nb_steps=nb_steps)
+    option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
+    tree = Tree(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
     print(f"Number of steps : {nb_steps}")
 
     start=time.time()
@@ -30,7 +30,7 @@ def generate_and_price(visualise : bool = False):
     if visualise:
         visualize_tree(tree)
 
-generate_and_price(1e-10, False)
+generate_and_price(1e-14, False)
 print("End")
 
 # Ecart * Nb Step
@@ -45,6 +45,7 @@ def analyse(nb_steps, market, option):
     tree.price()
     temps_exec = round(time.time()-start,5)
     return [tree.root_node.payoff, temps_exec]
+
 
 # prices = []
 # execution_times = []

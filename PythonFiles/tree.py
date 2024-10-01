@@ -53,13 +53,13 @@ class Tree():
         self.root_node = Node(price = self.market.spot, node_proba = 1)
         mid_node = self.root_node
 
-        for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
-            is_div = True if step == self.div_step else False
-            mid_node = self._build_column(mid_node, is_div)
-
-        # for step in range(self.nb_steps-1):
+        # for step in tqdm(range(self.nb_steps-1), total=self.nb_steps-1, desc="Building tree...", leave=False):
         #     is_div = True if step == self.div_step else False
         #     mid_node = self._build_column(mid_node, is_div)
+
+        for step in range(self.nb_steps-1):
+            is_div = True if step == self.div_step else False
+            mid_node = self._build_column(mid_node, is_div)
 
         self.last_node = mid_node
     
