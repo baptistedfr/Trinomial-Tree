@@ -66,7 +66,7 @@ class BermudeanPutOption(PutOption):
     exercise_dates : list[datetime]
 
 @dataclass
-class DigitalCallOption(CallOption):
+class DigitalCallOption(Option):
     coupon : float = 1
 
     def payoff(self, price : float) -> float:
@@ -76,7 +76,7 @@ class DigitalCallOption(CallOption):
             return 0
         
 @dataclass
-class DigitalPutOption(PutOption):
+class DigitalPutOption(Option):
     coupon : float = 1
 
     def payoff(self, price : float) -> float:
@@ -84,13 +84,4 @@ class DigitalPutOption(PutOption):
             return self.coupon
         else:
             return 0
-        
-@dataclass
-class DigitalPutOption(PutOption):
-    coupon : float = 1
-
-    def payoff(self, price : float) -> float:
-        if price < self.strike:
-            return self.coupon
-        else:
-            return 0
+    

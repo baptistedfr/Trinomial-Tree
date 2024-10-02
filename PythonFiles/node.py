@@ -6,6 +6,7 @@ from PythonFiles.market import Market
 class Node():
     price : float
     payoff : float = None
+    
     next_up : 'Node' = None
     next_mid : 'Node' = None
     next_down : 'Node' = None
