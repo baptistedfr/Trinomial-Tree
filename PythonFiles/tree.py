@@ -91,14 +91,14 @@ class Tree():
 
         node.next_mid.prec_node = node
 
-        node.compute_proba(self.alpha, self.time_delta, self.market)
+        node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
 
         node.next_mid.node_proba = node.node_proba * node.p_mid
         node.next_up.node_proba = node.node_proba * node.p_up
         node.next_down.node_proba = node.node_proba * node.p_down
 
-    def _find_mid(self, node : Node, candidate_mid : Node) -> Node:
-        """Returns the next mid which is the closest to the forward price"""
+    def _find_mid_down(self, node : Node, candidate_mid : Node) -> Node:
+        """Returns the next mid which is the closest to the forward price for down nodes computation"""
 
         forward_value = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
 
@@ -116,10 +116,29 @@ class Tree():
 
                 candidate_mid = future_mid_node
 
+    def _find_mid_up(self, node : Node, candidate_mid : Node) -> Node:
+        """Returns the next mid which is the closest to the forward price for upper nodes computation"""
+
+        forward_value = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
+
+        while(True):
+            up_price = candidate_mid.price * self.alpha
+
+            average_price = (candidate_mid.price + up_price) / 2
+
+            if forward_value < average_price:
+                return candidate_mid
+            else:
+                future_mid_node = Node(price = up_price)
+                future_mid_node.down_node = candidate_mid
+                candidate_mid.up_node = future_mid_node
+
+                candidate_mid = future_mid_node
+
     def _compute_upper_nodes(self, node : Node, is_div : bool) -> Node:
         if is_div:
             candidate_mid = node.down_node.next_up
-            node.next_mid = self._find_mid(node, candidate_mid)
+            node.next_mid = self._find_mid_up(node, candidate_mid)
             node.next_down = node.next_mid.down_node
         else:
             node.next_mid = node.down_node.next_up
@@ -129,7 +148,7 @@ class Tree():
             #If no prunning : create next up node -> compute transition proba -> add node probabilities -> connect the new node
             node.next_up = Node(price = node.next_mid.price * self.alpha)
 
-            node.compute_proba(self.alpha, self.time_delta, self.market)
+            node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
 
             node.next_up.node_proba = node.next_up.node_proba + node.node_proba * node.p_up if node.next_up.node_proba is not None else node.node_proba * node.p_up
             node.next_mid.node_proba = node.next_mid.node_proba + node.node_proba * node.p_mid if node.next_mid.node_proba is not None else node.node_proba * node.p_mid
@@ -151,7 +170,7 @@ class Tree():
     def _compute_down_nodes(self, node : Node, is_div : bool):
         if is_div:
             candidate_mid = node.up_node.next_down
-            node.next_mid = self._find_mid(node, candidate_mid)
+            node.next_mid = self._find_mid_down(node, candidate_mid)
             node.next_up = node.next_mid.up_node
         else:
             node.next_mid = node.up_node.next_down
@@ -161,16 +180,16 @@ class Tree():
             #If no prunning : create next up node -> compute transition proba -> add node probabilities -> connect the new node
             node.next_down = Node(price = node.next_mid.price / self.alpha)
 
-            node.compute_proba(self.alpha, self.time_delta, self.market)
+            node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
 
             node.next_up.node_proba = node.next_up.node_proba + node.node_proba * node.p_up if node.next_up.node_proba is not None else node.node_proba * node.p_up
             node.next_mid.node_proba = node.next_mid.node_proba + node.node_proba * node.p_mid if node.next_mid.node_proba is not None else node.node_proba * node.p_mid
             node.next_down.node_proba = node.next_down.node_proba + node.node_proba * node.p_down if node.next_down.node_proba is not None else node.node_proba * node.p_down
 
             node.next_down.up_node = node.next_mid
-            node.next_mid.node = node.next_down
+            node.next_mid.down_node = node.next_down
 
-            return node.node
+            return node.down_node
         else :
             #If prunning : monomial branching = 100% proba mid
             node.p_mid = 1.0
