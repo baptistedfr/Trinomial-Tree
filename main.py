@@ -34,6 +34,8 @@ def generate_and_price(market, option, prunning, visualise : bool = False, greek
         compute_greeks(tree, market, option, nb_steps, prunning)
     print("-----------------------------------------------")
 
+    return tree.root_node.payoff
+
 def analyse(nb_steps, market, option):
     tree = Tree(market = market, option=option, nb_steps=nb_steps, prunning_value=1e-10)
     start=time.time()
