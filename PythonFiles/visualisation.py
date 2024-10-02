@@ -34,7 +34,9 @@ def visualize_tree(tree : Tree):
         add_edges_by_level(tree.root_node, 0)
 
         # Tracer le graphe
-        plt.figure(figsize=(15, 10))
+        fig = plt.figure(figsize=(15, 10))
         nx.draw(G, pos, labels=node_labels, with_labels=True, node_size=1000, node_color="lightblue", font_size=8, font_color="black", font_weight='bold', arrowsize=10)
         plt.title("Arbre Trinomial - Visualisation 2D Optimisée (Prix uniquement)")
         plt.show()
+
+        return fig

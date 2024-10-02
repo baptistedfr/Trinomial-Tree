@@ -9,7 +9,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-def generate_and_price(market, option, prunning, visualise : bool = False, greeks : bool = False):
+def generate_and_price(market, option, nb_steps : int, prunning : float, visualise : bool = False, greeks : bool = False):
 
     tree = Tree(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
     print("\n-----------------------------------------------")
@@ -18,23 +18,29 @@ def generate_and_price(market, option, prunning, visualise : bool = False, greek
     print("\nPerformance :")
     start=time.time()
     tree.generate_tree()
-    print(f"Tree generated in : {round(time.time()-start,5)} sec")
+    timer_generate = round(time.time()-start,5)
+    print(f"Tree generated in : {timer_generate} sec")
 
     start=time.time()
     tree.price()
-    print(f"Option priced in : {round(time.time()-start,5)} sec")
+    timer_price = round(time.time()-start,5)
+    print(f"Option priced in : {timer_price} sec")
 
     print("\nPricing :")
-    print(f"Option price with tree : {tree.root_node.payoff}")
-    print(f"Option price with B&S or MC: {option.compute_price(market)}")
+    price = tree.root_node.payoff
+    close_formula_price = option.compute_price(market)
+    print(f"Option price with tree : {price}")
+    print(f"Close formula price : {close_formula_price}")
     
-    if visualise:
-        visualize_tree(tree)
+    fig, greeks_dict = None, None
+    if visualise and nb_steps < 25:
+        fig = visualize_tree(tree)
     if greeks:
-        compute_greeks(tree, market, option, nb_steps, prunning)
+        greeks_dict = compute_greeks(tree, market, option, nb_steps, prunning)
     print("-----------------------------------------------")
 
-    return tree.root_node.payoff
+    info_dict = {"Price" : price, "Benchmark Price" : close_formula_price, "Time Generate" : timer_generate, "Time Price" : timer_price}
+    return info_dict, greeks_dict, fig
 
 def analyse(nb_steps, market, option):
     tree = Tree(market = market, option=option, nb_steps=nb_steps, prunning_value=1e-10)
@@ -107,10 +113,10 @@ def generate_graphs():
     plt.tight_layout()
     plt.show()
 
-nb_steps = 1000
+nb_steps = 10
 prunning = 1e-10
 
 market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
 option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
 
-generate_and_price(market=market, option=option, prunning=prunning, visualise=False, greeks=True)
+generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=True, greeks=False)

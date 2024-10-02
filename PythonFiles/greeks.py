@@ -58,7 +58,7 @@ def compute_rho(tree : Tree, market : Market, option, nb_steps, prunning_value):
 
     return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_r)
 
-def compute_greeks(tree : Tree, market : Market, option, nb_steps, prunning_value):
+def compute_greeks(tree : Tree, market : Market, option, nb_steps, prunning_value) -> dict[str, float]:
     
     delta = compute_delta(tree, market, option, nb_steps, prunning_value)
     vega = compute_vega(tree , market , option, nb_steps, prunning_value)
@@ -72,3 +72,5 @@ def compute_greeks(tree : Tree, market : Market, option, nb_steps, prunning_valu
     print(f"Vega : {round(vega,3)}")
     print(f"Theta : {round(theta,3)}")
     print(f"Rho : {round(rho,3)}")
+
+    return {"Delta" : delta, "Gamma" : gamma, "Vega" : vega, "Theta" : theta, "Rho" : rho}
