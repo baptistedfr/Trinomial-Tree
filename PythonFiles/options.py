@@ -13,8 +13,8 @@ class Option(ABC):
     start_date : datetime = None
 
     def d1(self, market) -> float:
-        div_rate = market.dividende/market.spot
-        return (log(market.spot/self.strike) + self.time_to_maturity * (market.rate - div_rate + (pow(market.volatility, 2)/2)))/(market.volatility * sqrt(self.time_to_maturity))
+        spot_adjusted = market.spot - market.dividende
+        return (log(spot_adjusted/self.strike) + self.time_to_maturity * (market.rate + (pow(market.volatility, 2)/2)))/(market.volatility * sqrt(self.time_to_maturity))
 
     def d2(self, market) -> float:
         return self.d1(market) - market.volatility*sqrt(self.time_to_maturity)
@@ -43,15 +43,15 @@ class PutOption(Option):
 class EuropeanCallOption(CallOption):
     
     def compute_price(self, market) -> float:
-        div_rate = market.dividende/market.spot
-        return market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(self.d1(market)) - self.strike * exp(-market.rate*self.time_to_maturity)*norm.cdf(self.d2(market))
+        spot_adjusted = market.spot - market.dividende
+        return spot_adjusted * norm.cdf(self.d1(market)) - self.strike * exp(-market.rate*self.time_to_maturity)*norm.cdf(self.d2(market))
 
 @dataclass
 class EuropeanPutOption(PutOption):
     
     def compute_price(self, market):
-        div_rate = market.dividende/market.spot
-        return -market.spot * exp(-div_rate * self.time_to_maturity) * norm.cdf(-self.d1(market)) + self.strike * exp(-market.rate*self.time_to_maturity)*norm.cdf(-self.d2(market))
+        spot_adjusted = market.spot - market.dividende
+        return -spot_adjusted * norm.cdf(-self.d1(market)) + self.strike * exp(-market.rate*self.time_to_maturity)*norm.cdf(-self.d2(market))
 
 class AmericanCallOption(CallOption):
     pass
