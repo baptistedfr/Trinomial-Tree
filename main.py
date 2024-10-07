@@ -116,7 +116,7 @@ def generate_graphs():
 nb_steps = 1000
 prunning = 1e-10
 
-market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,1,5), dividende=3)
+market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,5,2), dividende=3)
 option = EuropeanPutOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
 
 generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=False, greeks=False)
