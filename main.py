@@ -28,9 +28,9 @@ def generate_and_price(market, option, nb_steps : int, prunning : float, visuali
 
     print("\nPricing :")
     price = tree.root_node.payoff
-    close_formula_price = option.compute_price(market)
+    close_formula_price = 0#option.compute_price(market)
     print(f"Option price with tree : {price}")
-    print(f"Close formula price : {close_formula_price}")
+    #print(f"Close formula price : {close_formula_price}")
     
     fig, greeks_dict = None, None
     if visualise and nb_steps < 25:
@@ -113,10 +113,10 @@ def generate_graphs():
     plt.tight_layout()
     plt.show()
 
-nb_steps = 1000
+nb_steps = 400
 prunning = 1e-10
 
-market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,5,2), dividende=3)
-option = EuropeanPutOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
+market = Market(spot=100, rate=0.03, volatility=0.21,div_date=datetime(2024,6,15), dividende=3)
+option = EuropeanCallOption(time_to_maturity=0.8219, strike=0, start_date=datetime(2024,3,1))
 
 generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=False, greeks=False)
