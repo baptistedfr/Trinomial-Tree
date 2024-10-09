@@ -112,7 +112,13 @@ class TreeMemoryAlloc():
             node.next_down = node.down_node.next_mid
             node.next_up = node.next_mid.up_node
             # On calcule les proba et les payoff
-            node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+            if (node.next_up is None):
+                node.p_mid = 1.0
+                node.p_down = 0.0
+                node.p_up = 0.0
+            else:
+                node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+            
             self._compute_retro_payoff(node, i)
             node.next_mid.next_mid = None
 
@@ -127,7 +133,13 @@ class TreeMemoryAlloc():
             node.next_up = node.up_node.next_mid
             node.next_down = node.next_mid.down_node
             # On calcule les proba et les payoff
-            node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+            if (node.next_down is None):
+                node.p_mid = 1.0
+                node.p_down = 0.0
+                node.p_up = 0.0
+            else:
+                node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+
             self._compute_retro_payoff(node, i)
             node.next_mid.next_mid = None
 
