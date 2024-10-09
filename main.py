@@ -4,6 +4,7 @@ from PythonFiles.visualisation import visualize_tree
 from datetime import datetime
 from PythonFiles.market import Market
 from PythonFiles.tree import Tree
+from PythonFiles.treeMemoryAlloc import TreeMemoryAlloc
 import time
 import numpy as np
 from tqdm import tqdm
@@ -113,10 +114,15 @@ def generate_graphs():
     plt.tight_layout()
     plt.show()
 
-nb_steps = 400
+nb_steps = 10000
 prunning = 1e-10
 
-market = Market(spot=100, rate=0.03, volatility=0.21,div_date=datetime(2024,6,15), dividende=3)
-option = EuropeanCallOption(time_to_maturity=0.8219, strike=0, start_date=datetime(2024,3,1))
+market = Market(spot=100, rate=0.03, volatility=0.2,div_date=datetime(2024,6,15), dividende=0)
+option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,3,1))
 
+start=time.time() 
+tree = TreeMemoryAlloc(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
+print(tree.price_tree())
+timer_price = round(time.time()-start,5)
+print(f"Option priced in : {timer_price} sec")
 generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=False, greeks=False)
