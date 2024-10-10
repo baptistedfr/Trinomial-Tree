@@ -4,6 +4,7 @@ from PythonFiles.market import Market
 
 @dataclass
 class Node():
+
     price : float
     payoff : float = None
     
@@ -20,17 +21,20 @@ class Node():
 
     node_proba : float = 0
     
-    def calculate_forward_node(self, rate : float, delta_time : float, dividende : float, is_div : bool):
-        if is_div:
-            forward_price = self.price * exp(rate * delta_time) - dividende
-        else :
-            forward_price = self.price * exp(rate * delta_time)
-        return Node(price=forward_price)
-    
-    def compute_proba(self, alpha : float, time_delta : int, market : Market, is_div : bool, dividende : float):
+    def branch_triplet(self) -> None:
+        '''
+        Branche les noeuds fils de la node après la création du triplet
+        '''
+        self.next_mid.down_node = self.next_down
+        self.next_mid.up_node = self.next_up
+        self.next_up.down_node = self.next_mid
+        self.next_down.up_node = self.next_mid
+        self.next_mid.prec_node = self
 
-        # next_mid_price = self.next_mid.price
-        
+    def compute_transition_proba(self, alpha : float, time_delta : int, market : Market, is_div : bool, dividende : float) -> None:
+        '''
+        Calcule les probabilités de transition de la node
+        '''
         forward = self.next_mid.price
         if is_div:
              expectation = self.price * exp(market.rate * time_delta) - dividende
@@ -41,3 +45,51 @@ class Node():
         self.p_down = ((pow(forward,-2) * (variance + pow(expectation,2)))- 1 - ((alpha+1) * ((pow(forward, -1)*expectation)-1))) / ((1 - alpha) * (pow(alpha,-2) - 1))
         self.p_up = ((pow(forward,-1)*expectation)-1-((alpha**(-1)-1)*self.p_down))/(alpha-1)
         self.p_mid = 1 - self.p_down - self.p_up
+
+    def compute_monomial(self) -> None:
+        '''
+        Réalise le branchement monomial de la node s'il y a prunning
+        '''
+        self.p_mid = 1.0
+        self.p_down = 0.0
+        self.p_up = 0.0
+        self.next_mid.node_proba += self.node_proba * self.p_mid
+
+    def update_proba(self):
+        '''
+        Calcule les probabilités d'existance des nodes fils de la node
+        '''
+        if self.next_up.node_proba is not None:
+            self.next_up.node_proba = self.next_up.node_proba + self.node_proba * self.p_up
+        else:
+            self.node_proba * self.p_up
+
+        if self.next_mid.node_proba is not None:
+            self.next_mid.node_proba = self.next_mid.node_proba + self.node_proba * self.p_mid
+        else:
+            self.node_proba * self.p_mid
+
+        if self.next_down.node_proba is not None:
+            self.next_down.node_proba = self.next_down.node_proba + self.node_proba * self.p_down
+        else:
+            self.node_proba * self.p_down
+
+    def node_retro_payoff(self, step : int, option, exercise_steps : list[int], rate : float, time_delta : float) -> None:
+
+        if self.payoff is None:
+            
+            #Calcul de chaque prix suivant multiplié par la proba de transition
+            value_up = self.next_up.payoff * self.p_up if self.next_up is not None else 0
+            value_down = self.next_down.payoff * self.p_down if self.next_down is not None else 0
+            value_mid = self.next_mid.payoff * self.p_mid if self.next_mid is not None else 0
+
+            #Prix retropropagé de l'option : moyenne pondérée par les proba actualisée
+            expectation = value_up + value_down + value_mid
+            retro_payoff = expectation * exp(-rate * time_delta)
+
+            #Exercice américain, on regarde s'il est avantageux d'exercer à ce timeStep
+            if step in exercise_steps:
+                exercise_payoff = option.payoff(self.price)
+                self.payoff = max(retro_payoff, exercise_payoff)
+            else:
+                self.payoff = retro_payoff

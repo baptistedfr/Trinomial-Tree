@@ -86,19 +86,13 @@ class Tree():
         '''
         Génération des 3 noeuds principaux depuis le noeud central à chaque colonne
         '''
-        node.next_mid = node.calculate_forward_node(self.market.rate, self.time_delta, self.market.dividende, is_div)
+        node.next_mid = self.calculate_forward_node(node, is_div)
         node.next_up = Node(price = node.next_mid.price * self.alpha)
         node.next_down = Node(price = node.next_mid.price / self.alpha)
 
-        node.next_mid.down_node = node.next_down
-        node.next_mid.up_node = node.next_up
+        node.branch_triplet()
 
-        node.next_up.down_node = node.next_mid
-        node.next_down.up_node = node.next_mid
-
-        node.next_mid.prec_node = node
-
-        node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
+        node.compute_transition_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
 
         node.next_mid.node_proba = node.node_proba * node.p_mid
         node.next_up.node_proba = node.node_proba * node.p_up
@@ -143,15 +137,15 @@ class Tree():
             #If no prunning : create next up node -> compute transition proba -> add node probabilities -> connect the new node
             node.next_up = Node(price = node.next_mid.price * self.alpha)
 
-            node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
-            self._update_proba(node)
+            node.compute_transition_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
+            node.update_proba()
             node.next_up.down_node = node.next_mid
             node.next_mid.up_node = node.next_up
             
             return node.up_node
         else :
             #If prunning : monomial branching = 100% proba mid
-            self._compute_monomial(node)
+            node.compute_monomial()
             return None
 
     def _compute_down_nodes(self, node : Node, is_div : bool)-> Node:
@@ -163,78 +157,81 @@ class Tree():
             node.next_mid = node.up_node.next_down
             node.next_up = node.up_node.next_mid
 
+        #Si pas de prunning : on créer le noeud down fils et on calcule les proba
         if node.node_proba > self.prunning_value :
-            #If no prunning : create next up node -> compute transition proba -> add node probabilities -> connect the new node
             node.next_down = Node(price = node.next_mid.price / self.alpha)
-            node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
-            self._update_proba(node)
+
+            #Calcul des proba de transition
+            node.compute_transition_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
+
+            #Calcul des proba d'existance des noeuds fils
+            node.update_proba()
+
             node.next_down.up_node = node.next_mid
             node.next_mid.down_node = node.next_down
-
             return node.down_node
+        
+        #Si prunning : branchement monomial
         else :
-            #If prunning : monomial branching = 100% proba mid
-            self._compute_monomial(node)
+            node.compute_monomial()
             return None
     
-    def _compute_monomial(self, node : Node):
-        node.p_mid = 1.0
-        node.p_down = 0.0
-        node.p_up = 0.0
-        node.next_mid.node_proba += node.node_proba * node.p_mid
+    def calculate_forward_node(self, node : Node, is_div : bool):
+        '''
+        Calcul du forward en fonction du dividende
+        '''
+        if is_div:
+            forward_price = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
+        else :
+            forward_price = node.price * exp(self.market.rate * self.time_delta)
+        return Node(price = forward_price)
 
-    def _update_proba(self, node : Node):
-        node.next_up.node_proba = node.next_up.node_proba + node.node_proba * node.p_up if node.next_up.node_proba is not None else node.node_proba * node.p_up
-        node.next_mid.node_proba = node.next_mid.node_proba + node.node_proba * node.p_mid if node.next_mid.node_proba is not None else node.node_proba * node.p_mid
-        node.next_down.node_proba = node.next_down.node_proba + node.node_proba * node.p_down if node.next_down.node_proba is not None else node.node_proba * node.p_down
+    def _compute_final_payoff(self, trunc_node : Node): 
+        '''
+        Calcule le payoff de l'option sur la dernière colonne
+        '''       
+        this_up = trunc_node
+        this_down = trunc_node
+
+        #Itération vers les noeuds supérieurs
+        while this_up is not None:
+            this_up.payoff = self.option.payoff(this_up.price)
+            this_up = this_up.up_node
         
-    def _compute_final_payoff(self, trunc_node : Node):        
-        end_node_down = trunc_node
-        end_node_up = trunc_node
-
-        while end_node_up is not None:
-            end_node_up.payoff = self.option.payoff(end_node_up.price)
-            end_node_up = end_node_up.up_node
-            
+         #Itération vers les noeuds inférieurs
         while end_node_down is not None:
             end_node_down.payoff = self.option.payoff(end_node_down.price)
             end_node_down = end_node_down.down_node
-    
-    def _compute_retro_payoff(self, node : Node, step : int):
-        if node.payoff is None:
-            #Check if the node exists because of tree prunning
-            value_up = node.next_up.payoff * node.p_up if node.next_up is not None else 0
-            value_down = node.next_down.payoff * node.p_down if node.next_down is not None else 0
-            value_mid = node.next_mid.payoff * node.p_mid if node.next_mid is not None else 0
 
-            expectation = value_up + value_down + value_mid
-            retro_payoff = expectation * exp(-self.market.rate * self.time_delta)
-
-            #Cas des options américaines
-            if step in self.exercise_steps:
-                exercise_payoff = self.option.payoff(node.price)
-                node.payoff = max(retro_payoff, exercise_payoff)
-            else:
-                node.payoff = retro_payoff
-
-    def _retro_payoff(self, trunc_node : Node, step : int):
-        
+    def _retro_payoff(self, trunc_node : Node, step : int) -> None:
+        '''
+        Calcule le prix de l'option sur la colonne par rétropropagation
+        '''
         this_up = trunc_node
         this_down = trunc_node
+
+        #Itération vers les noeuds supérieurs
         while this_up is not None:
-            self._compute_retro_payoff(this_up, step)
+            this_up.node_retro_payoff(step, self.option, self.exercise_steps, self.market.rate, self.time_delta)
             this_up = this_up.up_node
+
+        #Itération vers les noeuds inférieurs
         while this_down is not None:
-            self._compute_retro_payoff(this_down, step)
+            this_down.node_retro_payoff(step, self.option, self.exercise_steps, self.market.rate, self.time_delta)
             this_down =this_down.down_node
 
-    def price(self):
-
+    def price(self) -> None:
+        '''
+        Pricer l'option avec l'arbre par mouvement backward
+        '''
         last_node = self.last_node
+        #Calcul du payoff de la dernière colonne
         self._compute_final_payoff(last_node)
 
         step = self.nb_steps - 1
         trunc_node = last_node.prec_node
+
+        #Itération sur les noeuds du tronc en backward
         while trunc_node is not None:
             self._retro_payoff(trunc_node, step)
             trunc_node = trunc_node.prec_node
