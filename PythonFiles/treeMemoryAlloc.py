@@ -58,16 +58,19 @@ class TreeMemoryAlloc():
             mid_node.next_mid.prec_node = mid_node
             mid_node = mid_node.next_mid
 
+        print("Fin de la génération de l'arbre")
         # On compute les prices et payoff sur le dernier noeud
         k =int(6*sqrt(self.nb_steps/3))
         self._compute_last_payoff(mid_node, k)
-        
-        for i in range(self.nb_steps-1,-1,-1):
+        print("Fin de la comput des derniers payoffs")
+        for i in tqdm(range(self.nb_steps-1,-1,-1), total=self.nb_steps, desc="Building tree...", leave=False):
+        #for i in range(self.nb_steps-1,-1,-1):
             mid_node = mid_node.prec_node
             k = int(min(i, 6*sqrt(i/3)))
             self._compute_mid_node(mid_node, i)
             self._compute_upper_nodes(mid_node,k, i)
             self._compute_down_nodes(mid_node,k, i)
+            self._destroy_nodes(mid_node.next_mid)
 
         return mid_node.payoff
 
@@ -96,7 +99,6 @@ class TreeMemoryAlloc():
         node.next_down = node.next_mid.down_node
         node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
         self._compute_retro_payoff(node, i)
-        node.next_mid.next_mid = None
     
     '''
     Calcul des payoff des noeuds du haut
@@ -112,10 +114,18 @@ class TreeMemoryAlloc():
             node.next_down = node.down_node.next_mid
             node.next_up = node.next_mid.up_node
             # On calcule les proba et les payoff
-            node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+            if (node.next_up is None):
+                node.p_mid = 1.0
+                node.p_down = 0.0
+                node.p_up = 0.0
+            else:
+                node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+            
             self._compute_retro_payoff(node, i)
-            node.next_mid.next_mid = None
 
+    '''
+    Permet de calculer les payoffs des noeuds du bas
+    '''
     def _compute_down_nodes(self, node:Node,k:int, i:int):
         for _ in range(k):
             # On cree le noeud de haut dessus
@@ -127,9 +137,51 @@ class TreeMemoryAlloc():
             node.next_up = node.up_node.next_mid
             node.next_down = node.next_mid.down_node
             # On calcule les proba et les payoff
-            node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+            if (node.next_down is None):
+                node.p_mid = 1.0
+                node.p_down = 0.0
+                node.p_up = 0.0
+            else:
+                node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+
             self._compute_retro_payoff(node, i)
-            node.next_mid.next_mid = None
+
+    def _destroy_nodes(self, node: Node):
+        node_up = node.up_node
+        node_down = node.down_node
+
+        # Détruire les nœuds au-dessus
+        while node_up is not None:
+            if node_up.down_node is not None:
+                node_up.down_node.up_node = None
+            node_up.down_node = None
+            node_up.next_mid = None
+            node_up.next_down = None
+            node_up.next_up = None
+            next_node_up = node_up.up_node
+            node_up.up_node = None
+            node_up = next_node_up
+
+        # Détruire les nœuds en dessous
+        while node_down is not None:
+            if node_down.up_node is not None:
+                node_down.up_node.down_node = None
+            node_down.up_node = None
+            node_down.next_mid = None
+            node_down.next_down = None
+            node_down.next_up = None
+            next_node_down = node_down.down_node
+            node_down.down_node = None
+            node_down = next_node_down
+
+        # Finalement, détruire le nœud principal
+        node.up_node = None
+        node.down_node = None
+        node.next_mid = None
+        node.next_down = None
+        node.next_up = None
+        node = None
+            
 
 
     def _compute_retro_payoff(self, node : Node, step : int):

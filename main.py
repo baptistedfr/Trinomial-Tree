@@ -114,15 +114,16 @@ def generate_graphs():
     plt.tight_layout()
     plt.show()
 
-nb_steps = 10000
+nb_steps = 1000
 prunning = 1e-10
 
 market = Market(spot=100, rate=0.03, volatility=0.2,div_date=datetime(2024,6,15), dividende=0)
 option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,3,1))
 
-start=time.time() 
+
 tree = TreeMemoryAlloc(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
+start=time.time() 
 print(tree.price_tree())
 timer_price = round(time.time()-start,5)
 print(f"Option priced in : {timer_price} sec")
-generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=False, greeks=False)
+generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=False, greeks=False) 
