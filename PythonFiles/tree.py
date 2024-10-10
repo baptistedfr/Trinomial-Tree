@@ -31,7 +31,7 @@ class Tree():
         if self.market.dividende <= 0:
             return -1
         else:
-            time_delta_in_days = self.time_delta * 356
+            time_delta_in_days = self.time_delta * 365
             return ceil((self.market.div_date - self.option.start_date).days/time_delta_in_days)
 
     @cached_property
@@ -39,7 +39,7 @@ class Tree():
 
         if isinstance(self.option, BermudeanCallOption) or isinstance(self.option, BermudeanPutOption):
             exercise_dates = self.option.exercise_dates
-            time_delta_in_days = self.time_delta * 356
+            time_delta_in_days = self.time_delta * 365
             return [ceil((ex_date - self.option.start_date).days/time_delta_in_days) for ex_date in exercise_dates]
         
         elif isinstance(self.option, AmericanCallOption) or isinstance(self.option, AmericanPutOption):
@@ -53,13 +53,13 @@ class Tree():
         self.root_node = Node(price = self.market.spot, node_proba = 1)
         mid_node = self.root_node
 
-        for step in tqdm(range(self.nb_steps), total=self.nb_steps, desc="Building tree...", leave=False):
-            is_div = True if step == self.div_step else False
-            mid_node = self._build_column(mid_node, is_div)
-
-        # for step in range(self.nb_steps):
+        # for step in tqdm(range(self.nb_steps), total=self.nb_steps, desc="Building tree...", leave=False):
         #     is_div = True if step == self.div_step else False
         #     mid_node = self._build_column(mid_node, is_div)
+
+        for step in range(self.nb_steps):
+            is_div = True if step == self.div_step else False
+            mid_node = self._build_column(mid_node, is_div)
 
         self.last_node = mid_node
     
@@ -149,22 +149,14 @@ class Tree():
             node.next_up = Node(price = node.next_mid.price * self.alpha)
 
             node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
-
-            node.next_up.node_proba = node.next_up.node_proba + node.node_proba * node.p_up if node.next_up.node_proba is not None else node.node_proba * node.p_up
-            node.next_mid.node_proba = node.next_mid.node_proba + node.node_proba * node.p_mid if node.next_mid.node_proba is not None else node.node_proba * node.p_mid
-            node.next_down.node_proba = node.next_down.node_proba + node.node_proba * node.p_down if node.next_down.node_proba is not None else node.node_proba * node.p_down
-
+            self._update_proba(node)
             node.next_up.down_node = node.next_mid
             node.next_mid.up_node = node.next_up
             
             return node.up_node
         else :
             #If prunning : monomial branching = 100% proba mid
-            node.p_mid = 1.0
-            node.p_down = 0.0
-            node.p_up = 0.0
-
-            node.next_mid.node_proba += node.node_proba * node.p_mid
+            self._compute_monomial(node)
             return None
 
     def _compute_down_nodes(self, node : Node, is_div : bool):
@@ -179,27 +171,28 @@ class Tree():
         if node.node_proba > self.prunning_value :
             #If no prunning : create next up node -> compute transition proba -> add node probabilities -> connect the new node
             node.next_down = Node(price = node.next_mid.price / self.alpha)
-
             node.compute_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
-
-            node.next_up.node_proba = node.next_up.node_proba + node.node_proba * node.p_up if node.next_up.node_proba is not None else node.node_proba * node.p_up
-            node.next_mid.node_proba = node.next_mid.node_proba + node.node_proba * node.p_mid if node.next_mid.node_proba is not None else node.node_proba * node.p_mid
-            node.next_down.node_proba = node.next_down.node_proba + node.node_proba * node.p_down if node.next_down.node_proba is not None else node.node_proba * node.p_down
-
+            self._update_proba(node)
             node.next_down.up_node = node.next_mid
             node.next_mid.down_node = node.next_down
 
             return node.down_node
         else :
             #If prunning : monomial branching = 100% proba mid
-            node.p_mid = 1.0
-            node.p_down = 0.0
-            node.p_up = 0.0
-
-            node.next_mid.node_proba += node.node_proba * node.p_mid
-            
+            self._compute_monomial(node)
             return None
     
+    def _compute_monomial(self, node : Node):
+        node.p_mid = 1.0
+        node.p_down = 0.0
+        node.p_up = 0.0
+        node.next_mid.node_proba += node.node_proba * node.p_mid
+
+    def _update_proba(self, node : Node):
+        node.next_up.node_proba = node.next_up.node_proba + node.node_proba * node.p_up if node.next_up.node_proba is not None else node.node_proba * node.p_up
+        node.next_mid.node_proba = node.next_mid.node_proba + node.node_proba * node.p_mid if node.next_mid.node_proba is not None else node.node_proba * node.p_mid
+        node.next_down.node_proba = node.next_down.node_proba + node.node_proba * node.p_down if node.next_down.node_proba is not None else node.node_proba * node.p_down
+        
     def _compute_final_payoff(self, trunc_node : Node):        
         end_node_down = trunc_node
         end_node_up = trunc_node
