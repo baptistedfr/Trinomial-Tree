@@ -62,17 +62,17 @@ class Node():
         if self.next_up.node_proba is not None:
             self.next_up.node_proba = self.next_up.node_proba + self.node_proba * self.p_up
         else:
-            self.node_proba * self.p_up
+            self.next_up.node_proba = self.node_proba * self.p_up
 
         if self.next_mid.node_proba is not None:
             self.next_mid.node_proba = self.next_mid.node_proba + self.node_proba * self.p_mid
         else:
-            self.node_proba * self.p_mid
+            self.next_mid.node_proba = self.node_proba * self.p_mid
 
         if self.next_down.node_proba is not None:
             self.next_down.node_proba = self.next_down.node_proba + self.node_proba * self.p_down
         else:
-            self.node_proba * self.p_down
+            self.next_down.node_proba = self.node_proba * self.p_down
 
     def node_payoff(self, step : int, option, exercise_steps : list[int], rate : float, time_delta : float) -> None:
         '''
