@@ -54,7 +54,7 @@ class TreeMemoryAlloc():
         
         #On  génère l'arbre avec seulement les noeuds mid
         for _ in range(self.nb_steps):
-            mid_node.next_mid = mid_node.calculate_forward_node(self.market.rate, self.time_delta, self.market.dividende, False)
+            mid_node.next_mid =self.calculate_forward_node(mid_node, is_div=False)
             mid_node.next_mid.prec_node = mid_node
             mid_node = mid_node.next_mid
 
@@ -97,8 +97,8 @@ class TreeMemoryAlloc():
     def _compute_mid_node(self, node:Node, i:int):
         node.next_up = node.next_mid.up_node
         node.next_down = node.next_mid.down_node
-        node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
-        self._compute_retro_payoff(node, i)
+        node.compute_transition_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+        node.node_payoff(i, self.option, self.exercise_steps, self.market.rate, self.time_delta)
     
     '''
     Calcul des payoff des noeuds du haut
@@ -119,9 +119,9 @@ class TreeMemoryAlloc():
                 node.p_down = 0.0
                 node.p_up = 0.0
             else:
-                node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+                node.compute_transition_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
             
-            self._compute_retro_payoff(node, i)
+            node.node_payoff(i, self.option, self.exercise_steps, self.market.rate, self.time_delta)
 
     '''
     Permet de calculer les payoffs des noeuds du bas
@@ -142,9 +142,9 @@ class TreeMemoryAlloc():
                 node.p_down = 0.0
                 node.p_up = 0.0
             else:
-                node.compute_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
+                node.compute_transition_proba(alpha = self.alpha, time_delta = self.time_delta, market = self.market, dividende = self.market.dividende, is_div = False)
 
-            self._compute_retro_payoff(node, i)
+            node.node_payoff(i, self.option, self.exercise_steps, self.market.rate, self.time_delta)
 
     def _destroy_nodes(self, node: Node):
         node_up = node.up_node
@@ -181,24 +181,17 @@ class TreeMemoryAlloc():
         node.next_down = None
         node.next_up = None
         node = None
+        
+    def calculate_forward_node(self, node : Node, is_div : bool) -> Node:
+        '''
+        Calcul du forward en fonction du dividende
+        '''
+        if is_div:
+            forward_price = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
+        else :
+            forward_price = node.price * exp(self.market.rate * self.time_delta)
+        return Node(price = forward_price)
             
-
-
-    def _compute_retro_payoff(self, node : Node, step : int):
-        if node.payoff is None:
-            #Check if the node exists because of tree prunning
-            value_up = node.next_up.payoff * node.p_up if node.next_up is not None else 0
-            value_down = node.next_down.payoff * node.p_down if node.next_down is not None else 0
-            value_mid = node.next_mid.payoff * node.p_mid if node.next_mid is not None else 0
-
-            expectation = value_up + value_down + value_mid
-            retro_payoff = expectation * exp(-self.market.rate * self.time_delta)
-
-            if step in self.exercise_steps:
-                exercise_payoff = self.option.payoff(node.price)
-                node.payoff = max(retro_payoff, exercise_payoff)
-            else:
-                node.payoff = retro_payoff
 
 
 
