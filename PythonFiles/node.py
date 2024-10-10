@@ -46,7 +46,7 @@ class Node():
         self.p_up = ((pow(forward,-1)*expectation)-1-((alpha**(-1)-1)*self.p_down))/(alpha-1)
         self.p_mid = 1 - self.p_down - self.p_up
 
-    def compute_monomial(self) -> None:
+    def branch_monomial(self) -> None:
         '''
         Réalise le branchement monomial de la node s'il y a prunning
         '''
@@ -74,8 +74,10 @@ class Node():
         else:
             self.node_proba * self.p_down
 
-    def node_retro_payoff(self, step : int, option, exercise_steps : list[int], rate : float, time_delta : float) -> None:
-
+    def node_payoff(self, step : int, option, exercise_steps : list[int], rate : float, time_delta : float) -> None:
+        '''
+        Calcule le payoff du noeud en fonction du type d'exercice 
+        '''
         if self.payoff is None:
             
             #Calcul de chaque prix suivant multiplié par la proba de transition
