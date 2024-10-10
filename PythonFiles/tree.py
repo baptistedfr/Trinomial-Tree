@@ -49,7 +49,10 @@ class Tree():
             return []
         
     def generate_tree(self):
-
+        '''
+        Fonction qui permet de générer l'abre colonne par colonne en calculant les probabilités 
+        et en calculant les prix de chaque noeud
+        '''
         self.root_node = Node(price = self.market.spot, node_proba = 1)
         mid_node = self.root_node
 
@@ -64,7 +67,9 @@ class Tree():
         self.last_node = mid_node
     
     def _build_column(self, mid_node : Node, is_div : bool):
-        
+        '''
+        Fonction qui génere une colonne de noeud
+        '''
         self._build_triplet(mid_node, is_div)
 
         upper_node = mid_node.up_node
@@ -78,7 +83,9 @@ class Tree():
         return mid_node.next_mid
 
     def _build_triplet(self, node : Node, is_div : bool):
-        
+        '''
+        Génération des 3 noeuds principaux depuis le noeud central à chaque colonne
+        '''
         node.next_mid = node.calculate_forward_node(self.market.rate, self.time_delta, self.market.dividende, is_div)
         node.next_up = Node(price = node.next_mid.price * self.alpha)
         node.next_down = Node(price = node.next_mid.price / self.alpha)
@@ -97,48 +104,36 @@ class Tree():
         node.next_up.node_proba = node.node_proba * node.p_up
         node.next_down.node_proba = node.node_proba * node.p_down
 
-    def _find_mid_down(self, node : Node, candidate_mid : Node) -> Node:
-        """Returns the next mid which is the closest to the forward price for down nodes computation"""
-
+    def _find_mid(self, node: Node, candidate_mid: Node, direction: str) -> Node:
+        """Returns the next mid node closest to the forward price for both up and down directions."""
         forward_value = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
 
-        while(True):
-            down_price = candidate_mid.price / self.alpha
+        while True:
+            if direction == "down":
+                next_price = candidate_mid.price / self.alpha
+                condition = forward_value > (candidate_mid.price + next_price) / 2
+            else:
+                next_price = candidate_mid.price * self.alpha
+                condition = forward_value < (candidate_mid.price + next_price) / 2
 
-            average_price = (candidate_mid.price + down_price) / 2
-
-            if forward_value > average_price:
+            if condition:
                 return candidate_mid
             else:
-                future_mid_node = Node(price = down_price)
-                future_mid_node.up_node = candidate_mid
-                candidate_mid.down_node = future_mid_node
+                future_mid_node = Node(price=next_price)
+                if direction == "down":
+                    future_mid_node.up_node = candidate_mid
+                    candidate_mid.down_node = future_mid_node
+                else:
+                    future_mid_node.down_node = candidate_mid
+                    candidate_mid.up_node = future_mid_node
 
                 candidate_mid = future_mid_node
-
-    def _find_mid_up(self, node : Node, candidate_mid : Node) -> Node:
-        """Returns the next mid which is the closest to the forward price for upper nodes computation"""
-
-        forward_value = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
-
-        while(True):
-            up_price = candidate_mid.price * self.alpha
-
-            average_price = (candidate_mid.price + up_price) / 2
-
-            if forward_value < average_price:
-                return candidate_mid
-            else:
-                future_mid_node = Node(price = up_price)
-                future_mid_node.down_node = candidate_mid
-                candidate_mid.up_node = future_mid_node
-
-                candidate_mid = future_mid_node
+                
 
     def _compute_upper_nodes(self, node : Node, is_div : bool) -> Node:
         if is_div:
             candidate_mid = node.down_node.next_up
-            node.next_mid = self._find_mid_up(node, candidate_mid)
+            node.next_mid = self._find_mid(node, candidate_mid, "up")
             node.next_down = node.next_mid.down_node
         else:
             node.next_mid = node.down_node.next_up
@@ -159,10 +154,10 @@ class Tree():
             self._compute_monomial(node)
             return None
 
-    def _compute_down_nodes(self, node : Node, is_div : bool):
+    def _compute_down_nodes(self, node : Node, is_div : bool)-> Node:
         if is_div:
             candidate_mid = node.up_node.next_down
-            node.next_mid = self._find_mid_down(node, candidate_mid)
+            node.next_mid = self._find_mid(node, candidate_mid, "down")
             node.next_up = node.next_mid.up_node
         else:
             node.next_mid = node.up_node.next_down
@@ -215,6 +210,7 @@ class Tree():
             expectation = value_up + value_down + value_mid
             retro_payoff = expectation * exp(-self.market.rate * self.time_delta)
 
+            #Cas des options américaines
             if step in self.exercise_steps:
                 exercise_payoff = self.option.payoff(node.price)
                 node.payoff = max(retro_payoff, exercise_payoff)
