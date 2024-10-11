@@ -1,5 +1,5 @@
-from PythonFiles.market import Market
-from PythonFiles.tree import Tree
+from Models.market import Market
+from Models.tree import Tree
 import copy
 
 def compute_delta(tree : Tree, market : Market, option, nb_steps, prunning_value):
