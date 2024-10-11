@@ -40,11 +40,13 @@ class Node():
              expectation = self.price * exp(market.rate * time_delta) - dividende
         else :
             expectation = self.next_mid.price
+        
         variance = pow(self.price,2) * exp(2 * market.rate * time_delta) * (exp(pow(market.volatility, 2) * time_delta) -1) 
         
         self.p_down = ((pow(forward,-2) * (variance + pow(expectation,2)))- 1 - ((alpha+1) * ((pow(forward, -1)*expectation)-1))) / ((1 - alpha) * (pow(alpha,-2) - 1))
         self.p_up = ((pow(forward,-1)*expectation)-1-((alpha**(-1)-1)*self.p_down))/(alpha-1)
         self.p_mid = 1 - self.p_down - self.p_up
+        #print(f"{self.p_down}   {self.p_up}  {self.p_mid}")
 
     def branch_monomial(self) -> None:
         '''

@@ -13,8 +13,8 @@ def visualize_tree(tree : Tree):
                 return
 
             # Création d'un label pour le noeud avec seulement le prix (sans "up", "mid", "down")
-            node_label = f"{round(node.price, 2)}"
-            node_id = f"{level}_{round(node.price, 2)}"
+            node_label = f"{round(node.payoff, 2)}"
+            node_id = f"{level}_{round(node.payoff, 2)}"
             node_labels[node_id] = node_label
 
             # Ajout du noeud et de l'arête avec le parent

@@ -77,9 +77,9 @@ class Tree():
         for step in range(self.nb_steps):
             is_div = True if step == self.div_step else False
             mid_node = self._build_column(mid_node, is_div)
-
         #On enregistre la dernière node du tronc pour ne pas à avoir à reparcourir l'arbre pour le pricing
         self.last_node = mid_node
+        
     
     def _build_column(self, mid_node : Node, is_div : bool):
         '''
@@ -94,7 +94,7 @@ class Tree():
         #En itérant vers le bas
         while down_node is not None:
             down_node = self._compute_down_nodes(down_node, is_div)
-
+            
          #En itérant vers le haut
         while upper_node is not None:
             upper_node = self._compute_upper_nodes(upper_node, is_div)
@@ -193,6 +193,7 @@ class Tree():
             candidate_mid = node.up_node.next_down
             node.next_mid = self._find_mid(node, candidate_mid, "down")
             node.next_up = node.next_mid.up_node
+            
         else:
             node.next_mid = node.up_node.next_down
             node.next_up = node.up_node.next_mid
@@ -200,7 +201,6 @@ class Tree():
         #Si pas de prunning : on créer le noeud down fils et on calcule les proba
         if node.node_proba > self.prunning_value :
             node.next_down = Node(price = node.next_mid.price / self.alpha)
-
             #Calcul des proba de transition
             node.compute_transition_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
 
@@ -209,7 +209,6 @@ class Tree():
 
             node.next_down.up_node = node.next_mid
             node.next_mid.down_node = node.next_down
-
             return node.down_node
         
         #Si prunning : branchement monomial
