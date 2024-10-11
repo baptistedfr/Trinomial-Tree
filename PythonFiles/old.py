@@ -38,7 +38,7 @@ def _find_mid_up(self, node : Node, candidate_mid : Node) -> Node:
 
 import xlwings as xw
 from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
-from PythonFiles.market import Market
+from PythonFiles.Models.market import Market
 from PythonFiles.tree import Tree
 from datetime import datetime
 from abc import ABC,abstractmethod

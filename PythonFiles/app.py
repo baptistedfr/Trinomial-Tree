@@ -1,7 +1,7 @@
 import streamlit as st
 from main import generate_and_price
-from Models.market import Market
-from Models.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
+from PythonFiles.market import Market
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
 from datetime import datetime
 import pandas as pd
 
