@@ -3,7 +3,7 @@ from datetime import datetime
 from scipy.stats import norm
 from abc import ABC
 import numpy as np
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 
 @dataclass
 class Option(ABC):
@@ -59,11 +59,13 @@ class AmericanCallOption(CallOption):
 class AmericanPutOption(PutOption):
     pass
  
+@dataclass
 class BermudeanCallOption(CallOption):
-    exercise_dates : list[datetime]
+    exercise_dates : list[datetime] = field(default_factory=list)
 
+@dataclass
 class BermudeanPutOption(PutOption):
-    exercise_dates : list[datetime]
+    exercise_dates : list[datetime] = field(default_factory=list)
 
 @dataclass
 class DigitalCallOption(Option):
