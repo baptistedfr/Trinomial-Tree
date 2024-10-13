@@ -46,7 +46,6 @@ class Node():
         self.p_down = ((pow(forward,-2) * (variance + pow(expectation,2)))- 1 - ((alpha+1) * ((pow(forward, -1)*expectation)-1))) / ((1 - alpha) * (pow(alpha,-2) - 1))
         self.p_up = ((pow(forward,-1)*expectation)-1-((alpha**(-1)-1)*self.p_down))/(alpha-1)
         self.p_mid = 1 - self.p_down - self.p_up
-        #print(f"{self.p_down}   {self.p_up}  {self.p_mid}")
 
     def branch_monomial(self) -> None:
         '''
@@ -61,39 +60,26 @@ class Node():
         '''
         Calcule les probabilités d'existance des nodes fils de la node
         '''
-        if self.next_up.node_proba is not None:
-            self.next_up.node_proba = self.next_up.node_proba + self.node_proba * self.p_up
-        else:
-            self.next_up.node_proba = self.node_proba * self.p_up
-
-        if self.next_mid.node_proba is not None:
-            self.next_mid.node_proba = self.next_mid.node_proba + self.node_proba * self.p_mid
-        else:
-            self.next_mid.node_proba = self.node_proba * self.p_mid
-
-        if self.next_down.node_proba is not None:
-            self.next_down.node_proba = self.next_down.node_proba + self.node_proba * self.p_down
-        else:
-            self.next_down.node_proba = self.node_proba * self.p_down
+        self.next_up.node_proba = self.next_up.node_proba + self.node_proba * self.p_up
+        self.next_mid.node_proba = self.next_mid.node_proba + self.node_proba * self.p_mid
+        self.next_down.node_proba = self.next_down.node_proba + self.node_proba * self.p_down
 
     def node_payoff(self, step : int, option, exercise_steps : list[int], rate : float, time_delta : float) -> None:
         '''
         Calcule le payoff du noeud en fonction du type d'exercice 
-        '''
-        if self.payoff is None:
-            
-            #Calcul de chaque prix suivant multiplié par la proba de transition
-            value_up = self.next_up.payoff * self.p_up if self.next_up is not None else 0
-            value_down = self.next_down.payoff * self.p_down if self.next_down is not None else 0
-            value_mid = self.next_mid.payoff * self.p_mid if self.next_mid is not None else 0
+        ''' 
+        #Calcul de chaque prix suivant multiplié par la proba de transition
+        value_up = self.next_up.payoff * self.p_up if self.next_up is not None else 0
+        value_down = self.next_down.payoff * self.p_down if self.next_down is not None else 0
+        value_mid = self.next_mid.payoff * self.p_mid if self.next_mid is not None else 0
 
-            #Prix retropropagé de l'option : moyenne pondérée par les proba actualisée
-            expectation = value_up + value_down + value_mid
-            retro_payoff = expectation * exp(-rate * time_delta)
+        #Prix retropropagé de l'option : moyenne pondérée par les proba actualisée
+        expectation = value_up + value_down + value_mid
+        retro_payoff = expectation * exp(-rate * time_delta)
 
-            #Exercice américain, on regarde s'il est avantageux d'exercer à ce timeStep
-            if step in exercise_steps:
-                exercise_payoff = option.payoff(self.price)
-                self.payoff = max(retro_payoff, exercise_payoff)
-            else:
-                self.payoff = retro_payoff
+        #Exercice américain, on regarde s'il est avantageux d'exercer à ce timeStep
+        if step in exercise_steps:
+            exercise_payoff = option.payoff(self.price)
+            self.payoff = max(retro_payoff, exercise_payoff)
+        else:
+            self.payoff = retro_payoff
