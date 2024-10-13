@@ -1,14 +1,14 @@
-from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
-from PythonFiles.greeks import compute_greeks
-from PythonFiles.visualisation import visualize_tree
 from datetime import datetime
-from PythonFiles.market import Market
-from PythonFiles.tree import Tree
-from PythonFiles.treeMemoryAlloc import TreeMemoryAlloc
 import time
 import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
+from PythonFiles.greeks import compute_greeks
+from PythonFiles.visualisation import visualize_tree, price_convergence, plot_execution_time, plot_gap, plot_gap_step
+from PythonFiles.market import Market
+from PythonFiles.tree import Tree
+from PythonFiles.treeMemoryAlloc import TreeMemoryAlloc
 
 def generate_and_price(market, option, nb_steps : int, prunning : float, visualise : bool = False, greeks : bool = False):
 
@@ -70,59 +70,24 @@ def generate_graphs():
     bs_price = option.compute_price(market)
     gap = bs_price - prices_array
     gap_step = gap * steps
-    # --------- 1er Graphique: Price vs Steps -----------
-    plt.figure(figsize=(12, 5))
-
-    # Création du premier sous-graphique
-    plt.plot(steps, prices_array, label='Computed Prices')
-    plt.axhline(y=bs_price, color='r', linestyle='--', label=f'BS Price: {round(bs_price,2)}')
-    plt.title('Price vs Steps')
-    plt.xlabel('Steps')
-    plt.ylabel('Price')
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-    # --------- 2ème Graphique: Execution Time vs Steps -----------
-    plt.figure(figsize=(12, 5))
-    plt.plot(steps, execution_times_array, color='green', label='Execution Time')
-    plt.title('Execution Time vs Steps')
-    plt.xlabel('Steps')
-    plt.ylabel('Execution Time (seconds)')
-    plt.legend()
-    plt.tight_layout()
+    # --------- Génération des graphs -----------
+    fig_conv = price_convergence(steps, prices_array, bs_price)
+    fig_time = plot_execution_time(steps, execution_times_array)
+    fig_gap = plot_gap(steps, gap)
+    fig_gap_step = plot_gap_step(steps, gap_step)
     plt.show()
 
-    # --------- 3ème Graphique: Gap (BS Price - Computed Prices) -----------
-    plt.figure(figsize=(12, 5))
-    plt.plot(steps, gap, color='purple', label='Difference')
-    plt.title('Difference (BS Price - Computed Prices) vs Steps')
-    plt.xlabel('Steps')
-    plt.ylabel('Difference')
-    plt.axhline(y=0, color='black', linestyle='--')  # Ligne pour montrer la différence nulle
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
-    # --------- 4ème Graphique: Gap*Step (BS Price - Computed Prices) -----------
-    plt.figure(figsize=(12, 5))
-    plt.plot(steps, gap_step, color='orange', label='Difference*Pas')
-    plt.title('Difference (BS Price - Computed Prices) vs Steps')
-    plt.xlabel('Steps')
-    plt.ylabel('Difference')
-    plt.axhline(y=0, color='black', linestyle='--')  # Ligne pour montrer la différence nulle
-    plt.legend()
-    plt.tight_layout()
-    plt.show()
-
-nb_steps = 1000
+nb_steps = 10
 prunning = 1e-8
 
-market = Market(spot=100, rate=0.03, volatility=0.21,div_date=datetime(2024,6,15), dividende=0)
-option = EuropeanCallOption(time_to_maturity=0.8219, strike=101, start_date=datetime(2024,3,1))
-generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=False, greeks=False) 
+# market = Market(spot=100, rate=0.03, volatility=0.21,div_date=datetime(2024,6,15), dividende=0)
+# option = EuropeanCallOption(time_to_maturity=0.8219, strike=101, start_date=datetime(2024,3,1))
+# generate_and_price(market=market, option=option, nb_steps=nb_steps, prunning=prunning, visualise=True, greeks=True) 
 
-tree = TreeMemoryAlloc(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
-start=time.time() 
-print(tree.price_tree())
-timer_price = round(time.time()-start,5)
-print(f"Option priced in : {timer_price} sec")
+# tree = TreeMemoryAlloc(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
+# start=time.time() 
+# print(tree.price_tree())
+# timer_price = round(time.time()-start,5)
+# print(f"Option priced in : {timer_price} sec")
+
+#generate_graphs()

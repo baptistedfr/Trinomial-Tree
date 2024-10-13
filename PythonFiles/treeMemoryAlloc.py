@@ -1,11 +1,11 @@
-from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
 from math import exp, sqrt, ceil
 from typing import Union
-from PythonFiles.node import Node
 from tqdm import tqdm
 from dataclasses import dataclass
 from functools import cached_property
 from PythonFiles.market import Market
+from PythonFiles.node import Node
+from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption
 
 @dataclass
 class TreeMemoryAlloc():
