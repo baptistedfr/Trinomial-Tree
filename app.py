@@ -1,9 +1,9 @@
 import streamlit as st
-from main import generate_and_price
+import pandas as pd
 from PythonFiles.market import Market
 from PythonFiles.options import EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
+from PythonFiles.utils import generate_and_price
 from datetime import datetime
-import pandas as pd
 
 st.title("Trinomial Tree Pricer")
 st.header("Price your option :")
