@@ -1,5 +1,4 @@
 import matplotlib.pyplot as plt
-import plotly.graph_objects as go
 import networkx as nx
 from PythonFiles.tree import Tree
 

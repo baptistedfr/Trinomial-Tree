@@ -9,6 +9,9 @@ from PythonFiles.utils import make_market_from_input, make_option_from_input, ma
 from PythonFiles.visualisation import plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step
 
 def main():
+    '''
+    Permet de calculer le prix de l'option avec arbre trinomial depuis python en prenant les paramètres excels
+    '''
     try:
         # Si le script est exécuté depuis Excel
         wb = xw.Book.caller()
@@ -37,6 +40,9 @@ def main():
 
 @xw.sub
 def PythonPrice():
+    '''
+    Création d'un sub excel avec xlwings permettant de calculer un prix en utilisant le script python depuis xlwings
+    '''
     try:
         # Si le script est exécuté depuis Excel
         wb = xw.Book.caller()
@@ -65,6 +71,9 @@ def PythonPrice():
 
 @xw.sub
 def generate_python_graphs():
+    '''
+    Création d'un sub excel avec xlwings permettant de générer les graphs en utilisant le script python depuis xlwings
+    '''
     try:
         # Si le script est exécuté depuis Excel
         wb = xw.Book.caller()

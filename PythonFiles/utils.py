@@ -12,7 +12,9 @@ from PythonFiles.treeMemoryAlloc import TreeMemoryAlloc
 
 
 def generate_and_price(market, option, nb_steps : int, prunning : float, visualise : bool = False, greeks : bool = False):
-
+    '''
+    Fonction qui permet de générer le prix d'une option avec un arbre. Possibilité de plot l'arbre et de calculer les grecs
+    '''
     tree = Tree(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
     # print("\n-----------------------------------------------")
     # print(f"Number of steps : {nb_steps}")
