@@ -33,8 +33,8 @@ with col1:
     div = st.number_input("Dividend", value=0)
 with col2:
     default_date = datetime.now() + timedelta(days=365)
-    end_date = st.date_input("End date of the contract", default_date)
     start_date = st.date_input("Start date of the contract")
+    end_date = st.date_input("End date of the contract", default_date)
 
 if option_exercises == "Bermudean":
     if 'exercise_dates' not in st.session_state:
@@ -71,8 +71,8 @@ if price_button:
         elif div_date > end_date or div_date < start_date:
             st.warning("Please select a div date between start and end dates     !")
         else :
-            maturity = (end_date - start_date).days / 365
-            st.write(f"Option maturity : {maturity} years")
+            maturity = (end_date - start_date).days / 365,2
+            st.write(f"Option maturity : {round(maturity,2)} years")
             match option_exercises:
                 case "European":
                     if option_type == "Call":
