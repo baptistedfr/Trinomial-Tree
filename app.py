@@ -102,17 +102,17 @@ if price_button:
 
         html_code = f'''
         <div class="results-container">
-            <h2>Results</h2>
+            <h2><b>Results<b></h2>
             <div class="pricing">
                 <h3>Pricing :</h3>
-                <p>Option price : {option_price}</p>
-                <p>VS Close formula price : {close_formula_price}</p>
+                <p> <b>Option price :</b> {option_price}</p>
+                <p> <b>VS Close formula price </b>: {close_formula_price}</p>
             </div>
             <div class="performance">
-                <h3>Performance</h3>
-                <p>Tree generated in : {tree_time} sec</p>
-                <p>Option priced in : {pricing_time} sec</p>
-                <p>Total time : {total_time} sec</p>
+                <h3><b>Performance :<b></h3>
+                <p> <b>Tree generated in :</b> {tree_time} sec</p>
+                <p> <b>Option priced in :</b> {pricing_time} sec</p>
+                <p> <b>Total time :</b> {total_time} sec</p>
             </div>
         </div>
 
@@ -123,8 +123,6 @@ if price_button:
                 padding: 20px;
                 border: 2px solid #FF4B4B;
                 border-radius: 10px;
-                background-color: #1e1e1e;
-                color: white;
                 text-align: center;
             }}
 
