@@ -30,20 +30,15 @@ def visualize_tree(tree : Tree):
             add_edges_by_level(node.next_mid, level+1, node_id, pos_y)
             add_edges_by_level(node.next_down, level+1, node_id, pos_y-1)
 
-        # Ajouter les noeuds de l'arbre à partir de la racine
         add_edges_by_level(tree.root_node, 0)
-
-        # Tracer le graphe
         fig = plt.figure(figsize=(15, 10))
         nx.draw(G, pos, labels=node_labels, with_labels=True, node_size=1000, node_color="lightblue", font_size=8, font_color="black", font_weight='bold', arrowsize=10)
         plt.title("Arbre Trinomial - Visualisation 2D Optimisée (Prix uniquement)")
         plt.show()
-
         return fig
 
 def price_convergence(steps, prices_array, bs_price):
-    # Création d'une nouvelle figure pour les prix
-    fig, ax = plt.subplots()  # Utiliser plt.subplots() pour plus de flexibilité
+    fig, ax = plt.subplots()  
     ax.plot(steps, prices_array, label='Computed Prices')
     ax.axhline(y=bs_price, color='r', linestyle='--', label=f'BS Price: {round(bs_price, 2)}')
     ax.set_title('Price vs Steps')
@@ -54,9 +49,8 @@ def price_convergence(steps, prices_array, bs_price):
     return fig  
 
 def plot_execution_time(steps, execution_time):
-    # Création d'une nouvelle figure pour le temps d'exécution
-    fig, ax = plt.subplots(figsize=(12, 5))  # Utiliser plt.subplots() pour créer une figure et un axe
-    ax.plot(steps, execution_time, color='green', label='Execution Time')  # Correction du nom de la variable
+    fig, ax = plt.subplots(figsize=(12, 5)) 
+    ax.plot(steps, execution_time, color='green', label='Execution Time')  
     ax.set_title('Execution Time vs Steps')
     ax.set_xlabel('Steps')
     ax.set_ylabel('Execution Time (seconds)')
@@ -65,28 +59,23 @@ def plot_execution_time(steps, execution_time):
     return fig  
 
 def plot_gap(steps, gap):
-    # Création d'une nouvelle figure pour l'écart
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(steps, gap, color='purple', label='Difference (BS Price - Computed Prices)')
     ax.set_title('Difference (BS Price - Computed Prices) vs Steps')
     ax.set_xlabel('Steps')
     ax.set_ylabel('Difference')
-    ax.axhline(y=0, color='black', linestyle='--')  # Ligne pour montrer la différence nulle
+    ax.axhline(y=0, color='black', linestyle='--') 
     ax.legend()
     plt.tight_layout()
-
     return fig  
 
-
 def plot_gap_step(steps, gap_step):
-    # Création d'une nouvelle figure pour l'écart multiplié par les étapes
     fig, ax = plt.subplots(figsize=(12, 5))
     ax.plot(steps, gap_step, color='orange', label='Difference * Step')
     ax.set_title('Difference (BS Price - Computed Prices) * Steps vs Steps')
     ax.set_xlabel('Steps')
     ax.set_ylabel('Difference * Step')
-    ax.axhline(y=0, color='black', linestyle='--')  # Ligne pour montrer la différence nulle
+    ax.axhline(y=0, color='black', linestyle='--')  
     ax.legend()
     plt.tight_layout()
-
     return fig 
