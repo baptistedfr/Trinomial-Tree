@@ -66,11 +66,4 @@ def compute_greeks(tree : Tree, market : Market, option, nb_steps, prunning_valu
     theta = compute_theta(tree , market , option, nb_steps, prunning_value)
     rho = compute_rho(tree , market , option, nb_steps, prunning_value)
 
-    # print("\nGreeks : ")
-    # print(f"Delta : {round(delta,3)}")
-    # print(f"Gamma : {round(gamma,3)}")
-    # print(f"Vega : {round(vega,3)}")
-    # print(f"Theta : {round(theta,3)}")
-    # print(f"Rho : {round(rho,3)}")
-
     return {"Delta" : delta, "Gamma" : gamma, "Vega" : vega, "Theta" : theta, "Rho" : rho}

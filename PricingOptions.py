@@ -3,24 +3,19 @@ import numpy as np
 import pandas as pd
 import time
 from tqdm import tqdm
-import plotly.graph_objects as go
-import matplotlib.pyplot as plt
 from PythonFiles.tree import Tree
 from PythonFiles.greeks import compute_greeks
 from PythonFiles.utils import make_market_from_input, make_option_from_input, make_tree_from_input, calculate_prices_range
-from PythonFiles.visualisation import plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step
+from PythonFiles.visualisation import plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step, plot_greek
 
 def main():
     '''
     Permet de calculer le prix de l'option avec arbre trinomial depuis python en prenant les paramètres excels
     '''
     try:
-        # Si le script est exécuté depuis Excel
-        wb = xw.Book.caller()
+        wb = xw.Book.caller() # Script exécuté depuis excel
     except:
-        # Si le script est exécuté directement depuis Python (par exemple via un terminal ou un IDE)
-        wb = xw.Book("PricingOptions.xlsm")  # Remplacez par le chemin correct si nécessaire
-    
+        wb = xw.Book("PricingOptions.xlsm")   # Script exécuté depuis python
     # Accéder à la première feuille
     sheet_pricer = wb.sheets["Interface"]
     # Initialisation des classes
@@ -46,12 +41,9 @@ def PythonPrice():
     Création d'un sub excel avec xlwings permettant de calculer un prix en utilisant le script python depuis xlwings
     '''
     try:
-        # Si le script est exécuté depuis Excel
-        wb = xw.Book.caller()
+        wb = xw.Book.caller() # Script exécuté depuis excel
     except:
-        # Si le script est exécuté directement depuis Python (par exemple via un terminal ou un IDE)
-        wb = xw.Book("PricingOptions.xlsm")  # Remplacez par le chemin correct si nécessaire
-    
+        wb = xw.Book("PricingOptions.xlsm")   # Script exécuté depuis python
     # Accéder à la première feuille
     sheet_pricer = wb.sheets["Interface"]
     # Initialisation des classes
@@ -77,11 +69,9 @@ def generate_python_graphs():
     Création d'un sub excel avec xlwings permettant de générer les graphs en utilisant le script python depuis xlwings
     '''
     try:
-        # Si le script est exécuté depuis Excel
-        wb = xw.Book.caller()
+        wb = xw.Book.caller() # Script exécuté depuis excel
     except:
-        # Si le script est exécuté directement depuis Python (par exemple via un terminal ou un IDE)
-        wb = xw.Book("PricingOptions.xlsm")  # Remplacez par le chemin correct si nécessaire
+        wb = xw.Book("PricingOptions.xlsm")   # Script exécuté depuis python
     sheet_pricer = wb.sheets["Interface"]
     sheet_conv = wb.sheets["Convergence Study"]
     
@@ -112,73 +102,40 @@ def generate_greeks_graphs():
     Création d'un sub excel avec xlwings permettant de générer les graphs en utilisant le script python depuis xlwings
     '''
     try:
-        # Si le script est exécuté depuis Excel
-        wb = xw.Book.caller()
+        wb = xw.Book.caller() # Script exécuté depuis excel
     except:
-        # Si le script est exécuté directement depuis Python (par exemple via un terminal ou un IDE)
-        wb = xw.Book("PricingOptions.xlsm")  # Remplacez par le chemin correct si nécessaire
+        wb = xw.Book("PricingOptions.xlsm")   # Script exécuté depuis python
     sheet_pricer = wb.sheets["Interface"]
-    #sheet_greeks = wb.sheets["Greeks"]
+    sheet_greeks = wb.sheets["Greeks"]
     # Initialisation des classes
     greeks = []
     opt = make_option_from_input(sheet_pricer)
     spots = np.arange(int(opt.strike/2), int(opt.strike*1.5), 0.5 * int(opt.strike/100))
     for spot in tqdm(spots):
         mkt = make_market_from_input(sheet_pricer, spot)
-        tree = Tree(opt, mkt, nb_steps = 200, prunning_value = 10^-7)
+        tree = Tree(opt, mkt, nb_steps = 100, prunning_value = 10^-7)
         tree.generate_tree()
         tree.price()
-        greek_values = compute_greeks(tree, mkt, opt, 200, 10**-7)
+        greek_values = compute_greeks(tree, mkt, opt, 100, 10**-7)
         greeks.append(greek_values)
     df_greeks = pd.DataFrame(greeks)
     df_greeks['Spot'] = spots
+    # Récupération des figures des grecks
+    fig_delta = plot_greek(df_greeks, 'Delta', 'blue')
+    fig_gamma = plot_greek(df_greeks, 'Gamma', 'green')
+    fig_vega = plot_greek(df_greeks, 'Vega', 'red')
+    fig_theta = plot_greek(df_greeks, 'Theta', 'purple')
+    fig_rho = plot_greek(df_greeks, 'Rho', 'orange')
 
-    # Tracer Delta
-    fig_delta = go.Figure()
-    fig_delta.add_trace(go.Scatter(x=df_greeks['Spot'], y=df_greeks['Delta'], mode='lines+markers', name='Delta', line=dict(color='blue')))
-    fig_delta.update_layout(title='Variation de Delta en fonction du Spot',
-                            xaxis_title='Spot',
-                            yaxis_title='Delta',
-                            template='plotly_white')
-    fig_delta.show()
-
-    # Tracer Gamma
-    fig_gamma = go.Figure()
-    fig_gamma.add_trace(go.Scatter(x=df_greeks['Spot'], y=df_greeks['Gamma'], mode='lines+markers', name='Gamma', line=dict(color='green')))
-    fig_gamma.update_layout(title='Variation de Gamma en fonction du Spot',
-                            xaxis_title='Spot',
-                            yaxis_title='Gamma',
-                            template='plotly_white')
-    fig_gamma.show()
-
-    # Tracer Vega
-    fig_vega = go.Figure()
-    fig_vega.add_trace(go.Scatter(x=df_greeks['Spot'], y=df_greeks['Vega'], mode='lines+markers', name='Vega', line=dict(color='red')))
-    fig_vega.update_layout(title='Variation de Vega en fonction du Spot',
-                        xaxis_title='Spot',
-                        yaxis_title='Vega',
-                        template='plotly_white')
-    fig_vega.show()
-
-    # Tracer Theta
-    fig_theta = go.Figure()
-    fig_theta.add_trace(go.Scatter(x=df_greeks['Spot'], y=df_greeks['Theta'], mode='lines+markers', name='Theta', line=dict(color='purple')))
-    fig_theta.update_layout(title='Variation de Theta en fonction du Spot',
-                            xaxis_title='Spot',
-                            yaxis_title='Theta',
-                            template='plotly_white')
-    fig_theta.show()
-
-    # Tracer Rho
-    fig_rho = go.Figure()
-    fig_rho.add_trace(go.Scatter(x=df_greeks['Spot'], y=df_greeks['Rho'], mode='lines+markers', name='Rho', line=dict(color='orange')))
-    fig_rho.update_layout(title='Variation de Rho en fonction du Spot',
-                        xaxis_title='Spot',
-                        yaxis_title='Rho',
-                        template='plotly_white')
-    fig_rho.show()
+    sheet_greeks.pictures.add(fig_delta, name='Chart 1', update=True)
+    sheet_greeks.pictures.add(fig_gamma, name='Chart 2', update=True)
+    sheet_greeks.pictures.add(fig_vega, name='Chart 3', update=True)
+    sheet_greeks.pictures.add(fig_theta, name='Chart 4', update = True)
+    sheet_greeks.pictures.add(fig_rho, name='Chart 5', update = True)
+    
 if __name__ == "__main__":
     #main()
+    #generate_python_graphs()
     generate_greeks_graphs()
     
 

@@ -1,8 +1,14 @@
 import matplotlib.pyplot as plt
+import plotly.graph_objects as go
+import seaborn as sns
+import pandas as pd
 import networkx as nx
 from PythonFiles.tree import Tree
 
 def visualize_tree(tree : Tree, nb_steps):
+    '''
+    Création de l'affichage du prix de chaque branche de l'arbre
+    '''
     G = nx.DiGraph()  # Utilisation d'un graphe dirigé pour respecter la hiérarchie
     node_labels = {}
     pos = {}
@@ -34,44 +40,72 @@ def visualize_tree(tree : Tree, nb_steps):
     return fig
 
 def plot_price_convergence(steps, prices_array, bs_price):
-    fig, ax = plt.subplots()  
-    ax.plot(steps, prices_array, label='Computed Prices')
-    ax.axhline(y=bs_price, color='r', linestyle='--', label=f'BS Price: {round(bs_price, 2)}')
-    ax.set_title('Price convergence towards Black-Scholes')
-    ax.set_xlabel('Steps')
-    ax.set_ylabel('Price €')
-    ax.legend()
+    '''
+    Affiche la convergence de l'arbre binomial avec Black-Scholes en utilisant Seaborn
+    '''
+    plt.figure(figsize=(10, 6))  
+    sns.lineplot(x=steps, y=prices_array, label='Computed Prices')  
+    plt.axhline(y=bs_price, color='r', linestyle='--', label=f'BS Price: {round(bs_price, 2)}')  
+    plt.title('Price Convergence towards Black-Scholes')
+    plt.xlabel('Steps')
+    plt.ylabel('Price (€)')
+    plt.legend()
     plt.tight_layout()
-    return fig  
+    fig = plt.gcf()
+    return fig
 
 def plot_execution_time(steps, execution_time):
-    fig, ax = plt.subplots(figsize=(12, 5)) 
-    ax.plot(steps, execution_time, color='green', label='Execution Time')  
-    ax.set_title('Execution Time vs Steps')
-    ax.set_xlabel('Steps')
-    ax.set_ylabel('Execution Time (seconds)')
-    ax.legend()
+    '''
+    Affiche le temps d'éxécution de l'arbre vs le nombre de pas en utilisant Seaborn
+    '''
+    plt.figure(figsize=(12, 6))  # Taille de la figure
+    sns.lineplot(x=steps, y=execution_time, color='green', label='Execution Time')  
+    plt.title('Execution Time vs Steps')
+    plt.xlabel('Steps')
+    plt.ylabel('Execution Time (seconds)')
+    plt.legend()
     plt.tight_layout()
-    return fig  
+    fig = plt.gcf()
+    return fig
 
 def plot_gap(steps, gap):
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(steps, gap, color='purple', label='Difference (BS Price - Computed Prices)')
-    ax.set_title('Difference (BS Price - Computed Prices) vs Steps')
-    ax.set_xlabel('Steps')
-    ax.set_ylabel('Difference')
-    ax.axhline(y=0, color='black', linestyle='--') 
-    ax.legend()
+    '''
+    Affiche la diminution de l'erreur avec le nombre de pas en utilisant Seaborn
+    '''
+    plt.figure(figsize=(12, 6)) 
+    sns.lineplot(x=steps, y=gap, color='purple', label='Difference (BS Price - Computed Prices)')
+    plt.axhline(y=0, color='black', linestyle='--')
+    plt.title('Difference (BS Price - Computed Prices) vs Steps')
+    plt.xlabel('Steps')
+    plt.ylabel('Difference')
+    plt.legend()
     plt.tight_layout()
-    return fig  
+    fig = plt.gcf()
+    return fig
 
 def plot_gap_step(steps, gap_step):
-    fig, ax = plt.subplots(figsize=(12, 5))
-    ax.plot(steps, gap_step, color='orange', label='Difference * Step')
-    ax.set_title('Difference (BS Price - Computed Prices) * Steps vs Steps')
-    ax.set_xlabel('Steps')
-    ax.set_ylabel('Difference * Step')
-    ax.axhline(y=0, color='black', linestyle='--')  
-    ax.legend()
+    '''
+    Affiche la différence multipliée par le nombre de pas avec Seaborn
+    '''
+    plt.figure(figsize=(12, 6))  # Taille de la figure
+    sns.lineplot(x=steps, y=gap_step, color='orange', label='Difference * Step')
+    plt.axhline(y=0, color='black', linestyle='--')  # Ligne horizontale pour indiquer la référence
+    plt.title('Difference (BS Price - Computed Prices) * Steps vs Steps')
+    plt.xlabel('Steps')
+    plt.ylabel('Difference * Step')
+    plt.legend()
     plt.tight_layout()
-    return fig 
+    fig = plt.gcf()
+    return fig
+
+def plot_greek(df, greek, color = 'blue'):
+    '''
+    Affichage des grecs selon le spot
+    '''
+    plt.figure(figsize=(8, 5))
+    sns.lineplot(x='Spot', y=greek, data=df, marker='o', color=color)
+    plt.title(f'Variation de {greek} en fonction du Spot')
+    plt.xlabel('Spot')
+    plt.ylabel(greek)
+    fig = plt.gcf()
+    return fig
