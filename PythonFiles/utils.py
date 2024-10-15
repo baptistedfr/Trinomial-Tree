@@ -82,11 +82,12 @@ def calculate_prices_range(steps : list, market : Market, option : Option):
     return (prices_array, execution_times_array)
 
 ############# Fonctions qui permettent de créer les instances de classe depuis le fichier excel
-def make_market_from_input(sheet) -> Market:
+def make_market_from_input(sheet, spot : float = 0) -> Market:
     '''
     Fonction permettant de créer un marché depuis les paramètres de la feuille
     '''
-    spot: float = sheet.range('ISpot').value
+    if(spot == 0):
+        spot: float = sheet.range('ISpot').value
     volatility: float = sheet.range('IVol').value
     risk_free_rate: float = sheet.range('IRate').value
     dividende: float = sheet.range('IDiv').value
@@ -94,11 +95,12 @@ def make_market_from_input(sheet) -> Market:
     market = Market(spot=spot, volatility=volatility, rate=risk_free_rate, dividende=dividende, div_date=div_date)
     return market
 
-def make_option_from_input(sheet) -> Option:
+def make_option_from_input(sheet, strike : float = 0) -> Option:
     # Paramètres de l'option
     start_date: datetime = sheet.range('IStartDate').value
     maturity: float = sheet.range('IMaturity').value
-    strike: float = sheet.range('IStrike').value
+    if(strike==0): # Cas ou aucun strike n'est entré en paramètre
+        strike: float = sheet.range('IStrike').value   
     option_type: str = sheet.range('IOptionType').value
     exercise: float = sheet.range('IExerciseType').value
     match (exercise):
