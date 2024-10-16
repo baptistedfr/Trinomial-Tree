@@ -110,7 +110,7 @@ def generate_greeks_graphs():
     # Initialisation des classes
     greeks = []
     opt = make_option_from_input(sheet_pricer)
-    spots = np.arange(int(opt.strike/2), int(opt.strike*1.5), 0.5 * int(opt.strike/100))
+    spots = np.arange(int(opt.strike/2), int(opt.strike*1.5), 5)
     for spot in tqdm(spots):
         mkt = make_market_from_input(sheet_pricer, spot)
         tree = Tree(opt, mkt, nb_steps = 100, prunning_value = 10^-7)

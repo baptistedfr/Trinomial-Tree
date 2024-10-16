@@ -3,7 +3,7 @@ from PythonFiles.tree import Tree
 import copy
 
 def compute_delta(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_s = market.spot * 0.03
+    delta_s = market.spot * 0.01
 
     market_bis = Market(market.spot + delta_s, rate=market.rate, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
     tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
@@ -13,7 +13,7 @@ def compute_delta(tree : Tree, market : Market, option, nb_steps, prunning_value
     return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_s)
 
 def compute_vega(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_v = market.volatility * 0.05
+    delta_v = market.volatility * 0.01
 
     market_bis = Market(market.spot, rate=market.rate, volatility=market.volatility + delta_v, div_date=market.div_date, dividende=market.dividende)
     tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
@@ -23,7 +23,7 @@ def compute_vega(tree : Tree, market : Market, option, nb_steps, prunning_value)
     return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_v)
     
 def compute_gamma(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_s = market.spot * 0.15
+    delta_s = market.spot * 0.05
 
     market_bis = Market(market.spot + delta_s, rate=market.rate, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
     tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
@@ -38,7 +38,7 @@ def compute_gamma(tree : Tree, market : Market, option, nb_steps, prunning_value
     return (tree_bis.root_node.payoff - 2*tree.root_node.payoff + tree_ter.root_node.payoff)/(delta_s)**2
 
 def compute_theta(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_t = option.time_to_maturity * 0.05
+    delta_t = option.time_to_maturity * 0.01
     option_bis = copy.deepcopy(option)
     option_bis.time_to_maturity = option.time_to_maturity - delta_t
 
@@ -49,7 +49,7 @@ def compute_theta(tree : Tree, market : Market, option, nb_steps, prunning_value
     return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_t)
 
 def compute_rho(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_r = market.rate * 0.05
+    delta_r = market.rate * 0.01
 
     market_bis = Market(market.spot, rate=market.rate + delta_r, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
     tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
