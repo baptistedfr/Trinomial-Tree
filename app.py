@@ -71,7 +71,7 @@ if price_button:
         elif div_date > end_date or div_date < start_date:
             st.warning("Please select a div date between start and end dates     !")
         else :
-            maturity = (end_date - start_date).days / 365,2
+            maturity = (end_date - start_date).days / 365
             st.write(f"Option maturity : {round(maturity,2)} years")
             match option_exercises:
                 case "European":
