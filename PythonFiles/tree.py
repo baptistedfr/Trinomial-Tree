@@ -74,7 +74,7 @@ class Tree():
         #     mid_node = self._build_column(mid_node, is_div)
 
         #On itère sur le tronc
-        for step in range(self.nb_steps):
+        for step in range(1,self.nb_steps+1):
             is_div = True if step == self.div_step else False
             mid_node = self._build_column(mid_node, is_div)
         #On enregistre la dernière node du tronc pour ne pas à avoir à reparcourir l'arbre pour le pricing
