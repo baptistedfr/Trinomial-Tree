@@ -4,12 +4,11 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 from PythonFiles.options import Option, EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
-from PythonFiles.greeks import compute_greeks
 from PythonFiles.visualisation import visualize_tree, plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step
 from PythonFiles.market import Market
 from PythonFiles.tree import Tree
 from PythonFiles.treeMemoryAlloc import TreeMemoryAlloc
-
+from PythonFiles.greeks import Greeks
 
 def generate_and_price(market, option, nb_steps : int, prunning : float, visualise : bool = False, greeks : bool = False):
     '''
@@ -34,7 +33,9 @@ def generate_and_price(market, option, nb_steps : int, prunning : float, visuali
     if visualise and nb_steps < 25:
         fig = visualize_tree(tree,nb_steps)
     if greeks:
-        greeks_dict = compute_greeks(tree, market, option, nb_steps, prunning)
+        greeks_obj = Greeks(epsilon=0.01, tree=tree)
+        greeks_obj.compute_greeks()
+        greeks_dict = {"Delta" : greeks_obj.delta, "Gamma" : greeks_obj.gamma, "Vega" : greeks_obj.vega, "Theta" : greeks_obj.theta, "Rho" : greeks_obj.rho}
     print("-----------------------------------------------")
 
     info_dict = {"Price" : price, "Benchmark Price" : close_formula_price, "Time Generate" : timer_generate, "Time Price" : timer_price}

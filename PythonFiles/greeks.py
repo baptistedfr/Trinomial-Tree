@@ -1,69 +1,86 @@
+from PythonFiles.options import EuropeanCallOption
 from PythonFiles.market import Market
 from PythonFiles.tree import Tree
+from dataclasses import dataclass
 import copy
 
-def compute_delta(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_s = market.spot * 0.01
+@dataclass
+class Greeks:
 
-    market_bis = Market(market.spot + delta_s, rate=market.rate, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
-    tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
-    tree_bis.generate_tree()
-    tree_bis.price()
+    tree : Tree
+    epsilon : float = 0.01
 
-    return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_s)
+    delta : float = 0
+    gamma : float = 0
+    vega : float = 0 
+    theta : float = 0
+    rho : float = 0
 
-def compute_vega(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_v = market.volatility * 0.01
+    def compute_greeks(self) -> None:
+        self.tree.generate_tree()
+        self.tree.price()
+        self.price_tree = self.tree.root_node.payoff
 
-    market_bis = Market(market.spot, rate=market.rate, volatility=market.volatility + delta_v, div_date=market.div_date, dividende=market.dividende)
-    tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
-    tree_bis.generate_tree()
-    tree_bis.price()
+        self.compute_delta()
+        self.compute_vega()
+        self.compute_gamma()
+        self.compute_theta()
+        self.compute_rho()
 
-    return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_v)
-    
-def compute_gamma(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_s = market.spot * 0.05
+    def compute_delta(self):
 
-    market_bis = Market(market.spot + delta_s, rate=market.rate, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
-    tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
-    tree_bis.generate_tree()
-    tree_bis.price()
+        delta_s = self.epsilon * 100
 
-    market_ter = Market(market.spot - delta_s, rate=market.rate, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
-    tree_ter = Tree(market=market_ter, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
-    tree_ter.generate_tree()
-    tree_ter.price()
+        self.tree.market.spot += delta_s
+        self.tree.generate_tree()
+        self.tree.price()
 
-    return (tree_bis.root_node.payoff - 2*tree.root_node.payoff + tree_ter.root_node.payoff)/(delta_s)**2
+        self.delta = (self.tree.root_node.payoff - self.price_tree)/(delta_s)
+        self.tree.market.spot -= delta_s
 
-def compute_theta(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_t = option.time_to_maturity * 0.01
-    option_bis = copy.deepcopy(option)
-    option_bis.time_to_maturity = option.time_to_maturity - delta_t
+    def compute_vega(self):
+        delta_v = self.epsilon
 
-    tree_bis = Tree(market=market, option=option_bis, nb_steps=nb_steps, prunning_value=prunning_value)
-    tree_bis.generate_tree()
-    tree_bis.price()
+        self.tree.market.volatility += delta_v 
+        self.tree.generate_tree()
+        self.tree.price()
 
-    return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_t)
+        self.vega = (self.tree.root_node.payoff - self.price_tree)/(delta_v)
+        self.tree.market.volatility -= delta_v
+        
+    def compute_gamma(self):
+        delta_g = self.epsilon * 500
 
-def compute_rho(tree : Tree, market : Market, option, nb_steps, prunning_value):
-    delta_r = market.rate * 0.01
+        self.tree.market.spot += delta_g
+        self.tree.generate_tree()
+        self.tree.price()
+        price_up = self.tree.root_node.payoff
 
-    market_bis = Market(market.spot, rate=market.rate + delta_r, volatility=market.volatility, div_date=market.div_date, dividende=market.dividende)
-    tree_bis = Tree(market=market_bis, option=option, nb_steps=nb_steps, prunning_value=prunning_value)
-    tree_bis.generate_tree()
-    tree_bis.price()
+        self.tree.market.spot -= 2*delta_g
+        self.tree.generate_tree()
+        self.tree.price()
+        price_down = self.tree.root_node.payoff
 
-    return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_r)
+        self.gamma = (price_up - 2*self.price_tree + price_down)/(delta_g)**2
+        self.tree.market.spot += delta_g
 
-def compute_greeks(tree : Tree, market : Market, option, nb_steps, prunning_value) -> dict[str, float]:
-    
-    delta = compute_delta(tree, market, option, nb_steps, prunning_value)
-    vega = compute_vega(tree , market , option, nb_steps, prunning_value)
-    gamma = compute_gamma(tree , market , option, nb_steps, prunning_value)
-    theta = compute_theta(tree , market , option, nb_steps, prunning_value)
-    rho = compute_rho(tree , market , option, nb_steps, prunning_value)
+    def compute_theta(self):
+        delta_t = 5 * self.epsilon
 
-    return {"Delta" : delta, "Gamma" : gamma, "Vega" : vega, "Theta" : theta, "Rho" : rho}
+        self.tree.option.time_to_maturity -= delta_t
+        tree_bis = Tree(option=self.tree.option, market=self.tree.market, nb_steps=self.tree.nb_steps, prunning_value=self.tree.prunning_value)
+        tree_bis.generate_tree()
+        tree_bis.price()
+
+        self.theta = (tree_bis.root_node.payoff - self.price_tree)/(delta_t)
+        self.tree.option.time_to_maturity += delta_t
+
+    def compute_rho(self):
+        delta_r = self.epsilon
+
+        self.tree.market.rate += delta_r
+        self.tree.generate_tree()
+        self.tree.price()
+
+        self.rho = (self.tree.root_node.payoff - self.price_tree)/(delta_r)
+        self.tree.market.rate -= delta_r
