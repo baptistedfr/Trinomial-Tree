@@ -9,14 +9,13 @@ def visualize_tree(tree : Tree, nb_steps):
     '''
     Création de l'affichage du prix de chaque branche de l'arbre
     '''
-    G = nx.DiGraph()  # Utilisation d'un graphe dirigé pour respecter la hiérarchie
+    G = nx.DiGraph()  
     node_labels = {}
     pos = {}
     # Ajout des noeuds et des arêtes par niveau
     def add_edges_by_level(node, level=0, parent=None, pos_y=0):
         if node is None:
             return
-        # Création d'un label pour le noeud avec seulement le prix (sans "up", "mid", "down")
         node_label = f"{round(node.price, 2)}"
         node_id = f"{level}_{round(node.price, 2)}"
         node_labels[node_id] = node_label
@@ -25,8 +24,6 @@ def visualize_tree(tree : Tree, nb_steps):
         G.add_node(node_id, level=level)
         if parent:
             G.add_edge(parent, node_id)
-
-        # Définir la position du noeud en 2D (x=level, y=pos_y)
         pos[node_id] = (level, pos_y)
         # Appel récursif pour les noeuds enfants
         add_edges_by_level(node.next_up, level+1, node_id, pos_y+1)

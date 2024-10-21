@@ -23,17 +23,12 @@ def generate_and_price(market, option, nb_steps : int, prunning : float, visuali
     start=time.time()
     tree.generate_tree()
     timer_generate = round(time.time()-start,5)
-    # print(f"Tree generated in : {timer_generate} sec")
     start=time.time()
     tree.price()
     timer_price = round(time.time()-start,5)
-    # print(f"Option priced in : {timer_price} sec")
 
-    # print("\nPricing :")
     price = tree.root_node.payoff
     close_formula_price = option.compute_price(market)
-    # print(f"Option price with tree : {price}")
-    # print(f"Close formula price : {close_formula_price}")
     
     fig, greeks_dict = None, None
     if visualise and nb_steps < 25:
@@ -66,7 +61,6 @@ def calculate_prices_range(steps : list, market : Market, option : Option):
     prices = []
     execution_times = []
     
-    #Boucle sur chaque valeur de la plage
     for step in steps:
         tree = Tree(market = market, option=option, nb_steps=int(step), prunning_value=1e-10)
         start=time.time()
