@@ -134,8 +134,7 @@ def generate_greeks_graphs():
     sheet_greeks.pictures.add(fig_rho, name='Chart 5', update = True)
     
 if __name__ == "__main__":
-    #main()
-    #generate_python_graphs()
-    generate_greeks_graphs()
+    main()
+
     
 
