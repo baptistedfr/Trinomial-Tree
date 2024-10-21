@@ -20,7 +20,7 @@ def compute_vega(tree : Tree, market : Market, option, nb_steps, prunning_value)
     tree_bis.generate_tree()
     tree_bis.price()
 
-    return (tree_bis.root_node.payoff - tree.root_node.payoff)/(100 * delta_v)
+    return (tree_bis.root_node.payoff - tree.root_node.payoff)/(delta_v)
     
 def compute_gamma(tree : Tree, market : Market, option, nb_steps, prunning_value):
     delta_s = market.spot * 0.05
