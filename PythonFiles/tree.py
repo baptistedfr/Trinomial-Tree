@@ -1,6 +1,5 @@
 from math import exp, sqrt, ceil
 from typing import Union
-from tqdm import tqdm
 from dataclasses import dataclass
 from functools import cached_property
 from PythonFiles.market import Market

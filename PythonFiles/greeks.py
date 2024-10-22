@@ -2,7 +2,6 @@ from PythonFiles.options import EuropeanCallOption
 from PythonFiles.market import Market
 from PythonFiles.tree import Tree
 from dataclasses import dataclass
-import copy
 
 @dataclass
 class Greeks:

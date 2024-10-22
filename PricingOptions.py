@@ -4,8 +4,6 @@ import pandas as pd
 import time
 from tqdm import tqdm
 from PythonFiles.tree import Tree
-from PythonFiles.market import Market
-from PythonFiles.options import EuropeanCallOption
 from PythonFiles.greeks import Greeks
 from PythonFiles.utils import make_market_from_input, make_option_from_input, make_tree_from_input, calculate_prices_range, price_tree_memory
 from PythonFiles.visualisation import plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step, plot_greek
