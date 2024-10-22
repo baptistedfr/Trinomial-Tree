@@ -18,7 +18,6 @@ def visualize_tree(tree : Tree, nb_steps):
         node_label = f"{round(node.price, 2)}"
         node_id = f"{level}_{round(node.price, 2)}"
         node_labels[node_id] = node_label
-
         # Ajout du noeud et de l'arête avec le parent
         G.add_node(node_id, level=level)
         if parent:
@@ -54,7 +53,7 @@ def plot_execution_time(steps, execution_time):
     '''
     Affiche le temps d'éxécution de l'arbre vs le nombre de pas en utilisant Seaborn
     '''
-    plt.figure(figsize=(12, 6))  # Taille de la figure
+    plt.figure(figsize=(12, 6)) 
     sns.lineplot(x=steps, y=execution_time, color='green', label='Execution Time')  
     plt.title('Execution Time vs Steps')
     plt.xlabel('Steps')
@@ -83,9 +82,9 @@ def plot_gap_step(steps, gap_step):
     '''
     Affiche la différence multipliée par le nombre de pas avec Seaborn
     '''
-    plt.figure(figsize=(12, 6))  # Taille de la figure
+    plt.figure(figsize=(12, 6)) 
     sns.lineplot(x=steps, y=gap_step, color='orange', label='Difference * Step')
-    plt.axhline(y=0, color='black', linestyle='--')  # Ligne horizontale pour indiquer la référence
+    plt.axhline(y=0, color='black', linestyle='--')  
     plt.title('Difference (BS Price - Computed Prices) * Steps vs Steps')
     plt.xlabel('Steps')
     plt.ylabel('Difference * Step')
