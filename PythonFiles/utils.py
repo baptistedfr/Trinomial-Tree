@@ -15,10 +15,6 @@ def generate_and_price(market, option, nb_steps : int, prunning : float, visuali
     Fonction qui permet de générer le prix d'une option avec un arbre. Possibilité de plot l'arbre et de calculer les grecs
     '''
     tree = Tree(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
-    # print("\n-----------------------------------------------")
-    # print(f"Number of steps : {nb_steps}")
-
-    # print("\nPerformance :")
     start=time.time()
     tree.generate_tree()
     timer_generate = round(time.time()-start,5)
@@ -41,24 +37,21 @@ def generate_and_price(market, option, nb_steps : int, prunning : float, visuali
     info_dict = {"Price" : price, "Benchmark Price" : close_formula_price, "Time Generate" : timer_generate, "Time Price" : timer_price}
     return info_dict, greeks_dict, fig
 
-def generate_graphs():
-    market = Market(spot=100, rate=0.05, volatility=0.2,div_date=datetime(2024,2,1), dividende=0)
-    option = EuropeanCallOption(time_to_maturity=1, strike=100, start_date=datetime(2024,1,1))
-    prices = []
-    execution_times = []
-    steps = [1] + [x for x in range (5,50,5)] + [x for x in range (50,500,25)] + [x for x in range (500,1000,50)] + [x for x in range (1000,2500,100)]
-    prices,execution_times = calculate_prices_range(steps, market, option)
-    bs_price = option.compute_price(market)
-    gap = bs_price - prices
-    gap_step = gap * steps
-    # --------- Génération des graphs -----------
-    fig_conv = plot_price_convergence(steps, prices, bs_price)
-    fig_time = plot_execution_time(steps, execution_times)
-    fig_gap = plot_gap(steps, gap)
-    fig_gap_step = plot_gap_step(steps, gap_step)
-    plt.show()
-    
+def price_tree_memory(market, option, nb_steps : int, prunning : float):
+    '''
+    Fonction qui permet de générer le prix d'une option avec un arbre gérant l'allocation de mémoire
+    '''
+    tree_memory = TreeMemoryAlloc(market=market, option=option, nb_steps=nb_steps, prunning_value=prunning)
+    start=time.time()
+    price = tree_memory.price_tree()
+    timer_price = round(time.time()-start,5)
+    close_formula_price = option.compute_price(market)
+    return price, timer_price
+
 def calculate_prices_range(steps : list, market : Market, option : Option):
+    '''
+    Fonction permettant de calculer le temps d'exécution et le prix pour un nombre de step donné
+    '''
     prices = []
     execution_times = []
     
@@ -91,6 +84,9 @@ def make_market_from_input(sheet, spot : float = 0) -> Market:
     return market
 
 def make_option_from_input(sheet, strike : float = 0) -> Option:
+    '''
+    Fonction permettant de créer une option depuis les paramètres de la feuille excel
+    '''
     # Paramètres de l'option
     start_date: datetime = sheet.range('IStartDate').value
     maturity: float = sheet.range('IMaturity').value
@@ -119,3 +115,4 @@ def make_tree_from_input(sheet, mkt:Market, opt:Option, nb_steps:int = 0) -> Tre
         nb_steps: int = int(sheet.range('INbSteps').value)
     prunning : float = sheet.range('IPrunning').value
     return Tree(option = opt, market = mkt, nb_steps = nb_steps, prunning_value = prunning)
+

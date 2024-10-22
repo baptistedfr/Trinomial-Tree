@@ -64,7 +64,6 @@ class TreeMemoryAlloc():
         self._compute_last_payoff(mid_node, k)
         print("Fin de la comput des derniers payoffs")
         for i in tqdm(range(self.nb_steps-1,-1,-1), total=self.nb_steps, desc="Building tree...", leave=False):
-        #for i in range(self.nb_steps-1,-1,-1):
             mid_node = mid_node.prec_node
             k = int(min(i, 6*sqrt(i/3)))
             self._compute_mid_node(mid_node, i)
@@ -147,6 +146,9 @@ class TreeMemoryAlloc():
             node.node_payoff(i, self.option, self.exercise_steps, self.market.rate, self.time_delta)
 
     def _destroy_nodes(self, node: Node):
+        '''
+        Fonction qui va détruire les noeuds
+        '''
         node_up = node.up_node
         node_down = node.down_node
 

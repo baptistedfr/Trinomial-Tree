@@ -4,8 +4,10 @@ import pandas as pd
 import time
 from tqdm import tqdm
 from PythonFiles.tree import Tree
-from PythonFiles.greeks import compute_greeks
-from PythonFiles.utils import make_market_from_input, make_option_from_input, make_tree_from_input, calculate_prices_range
+from PythonFiles.market import Market
+from PythonFiles.options import EuropeanCallOption
+from PythonFiles.greeks import Greeks
+from PythonFiles.utils import make_market_from_input, make_option_from_input, make_tree_from_input, calculate_prices_range, price_tree_memory
 from PythonFiles.visualisation import plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step, plot_greek
 
 def main():
@@ -36,9 +38,9 @@ def main():
     sheet_pricer.range('IPythonPriceTime').value = price_time
 
 @xw.sub
-def PythonPrice():
+def python_price():
     '''
-    Création d'un sub excel avec xlwings permettant de calculer un prix en utilisant le script python depuis xlwings
+    Création d'un sub excel avec xlwings permettant de calculer un prix 
     '''
     try:
         wb = xw.Book.caller() # Script exécuté depuis excel
@@ -64,9 +66,37 @@ def PythonPrice():
     sheet_pricer.range('IPythonPriceTime').value = price_time
 
 @xw.sub
+def python_tree_memory_price():
+    '''
+    Création d'un sub excel avec xlwings permettant de calculer un prix 
+    '''
+    try:
+        wb = xw.Book.caller() # Script exécuté depuis excel
+    except:
+        wb = xw.Book("PricingOptions.xlsm")   # Script exécuté depuis python
+    # Accéder à la première feuille
+    sheet_pricer = wb.sheets["Interface"]
+    # Initialisation des classes
+    mkt = make_market_from_input(sheet_pricer)
+    option = make_option_from_input(sheet_pricer)
+
+    if (mkt.dividende > 0): # Indisponible avec dividende pour l'instant
+        sheet_pricer.range('IPythonPriceTreeMemory').value = "N/A"
+        sheet_pricer.range('IPythonTimeTreeMemory').value = "N/A"
+        wb.app.api.Application.Run('MsgBox "Le pricing avec allocation de mémoire est indisponible avec dividende"')
+        return
+    
+    nb_steps: int = int(sheet_pricer.range('INbSteps').value)
+    prunning : float = sheet_pricer.range('IPrunning').value
+    price, timer = price_tree_memory(mkt,option,nb_steps  , prunning)
+    
+    sheet_pricer.range('IPythonPriceTreeMemory').value = price
+    sheet_pricer.range('IPythonTimeTreeMemory').value = timer
+
+@xw.sub
 def generate_python_graphs():
     '''
-    Création d'un sub excel avec xlwings permettant de générer les graphs en utilisant le script python depuis xlwings
+    Création d'un sub excel avec xlwings permettant de générer les graphiques de convergence
     '''
     try:
         wb = xw.Book.caller() # Script exécuté depuis excel
@@ -85,7 +115,6 @@ def generate_python_graphs():
     gap = bs_price - prices
     gap_step = gap * steps
 
-    # --------- Génération des graphs -----------
     fig_conv = plot_price_convergence(steps, prices, bs_price)
     fig_time = plot_execution_time(steps, execution_times)
     fig_gap = plot_gap(steps, gap)
@@ -99,7 +128,7 @@ def generate_python_graphs():
 @xw.sub
 def generate_greeks_graphs():
     '''
-    Création d'un sub excel avec xlwings permettant de générer les graphs en utilisant le script python depuis xlwings
+    Création d'un sub excel avec xlwings permettant de générer les graphiques des grecs
     '''
     try:
         wb = xw.Book.caller() # Script exécuté depuis excel
@@ -111,13 +140,14 @@ def generate_greeks_graphs():
     greeks = []
     opt = make_option_from_input(sheet_pricer)
     spots = np.arange(int(opt.strike/2), int(opt.strike*1.5), 5)
-    for spot in tqdm(spots):
+    for spot in tqdm(spots): # On calcule les grecs pour chaque spot
         mkt = make_market_from_input(sheet_pricer, spot)
         tree = Tree(opt, mkt, nb_steps = 100, prunning_value = 10^-7)
         tree.generate_tree()
         tree.price()
-        greek_values = compute_greeks(tree, mkt, opt, 100, 10**-7)
-        greeks.append(greek_values)
+        greek = Greeks(epsilon=0.01, tree=tree)
+        greek.compute_greeks()
+        greeks.append({'Delta':greek.delta, 'Gamma':greek.gamma, 'Vega':greek.vega, 'Theta':greek.theta,'Rho':greek.rho})
     df_greeks = pd.DataFrame(greeks)
     df_greeks['Spot'] = spots
     # Récupération des figures des grecks
@@ -135,6 +165,5 @@ def generate_greeks_graphs():
     
 if __name__ == "__main__":
     main()
-
     
 

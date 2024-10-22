@@ -33,7 +33,7 @@ class Tree():
     @cached_property
     def div_step(self) -> float:
         '''
-        Définit le timeStep auquel le lachement du dividend va avoir lieu en fonction des dates
+        Définit le timeStep auquel le détachement du dividende va avoir lieu en fonction des dates
         '''
         if self.market.dividende <= 0:
             return -1
@@ -68,11 +68,6 @@ class Tree():
         #Initialisation de la root avec le prix spot
         self.root_node = Node(price = self.market.spot, node_proba = 1)
         mid_node = self.root_node
-
-        # for step in tqdm(range(self.nb_steps), total=self.nb_steps, desc="Building tree...", leave=False):
-        #     is_div = True if step == self.div_step else False
-        #     mid_node = self._build_column(mid_node, is_div)
-
         #On itère sur le tronc
         for step in range(1,self.nb_steps+1):
             is_div = True if step == self.div_step else False
@@ -108,13 +103,10 @@ class Tree():
         node.next_mid = self.calculate_forward_node(node, is_div)
         node.next_up = Node(price = node.next_mid.price * self.alpha)
         node.next_down = Node(price = node.next_mid.price / self.alpha)
-
         #Branchements des nouveaux noeuds entre eux
         node.branch_triplet()
-
         #On calcule les proba de transitions dans les états suivants
         node.compute_transition_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
-
         #On calcule les proba d'existence des nouveaux noeuds
         node.update_proba()
 
@@ -122,10 +114,8 @@ class Tree():
         '''
         Cherche le prochain noeud mid qui est le plus proche du prix forward dans les deux directions au moment du lachement du dividende
         '''
-
         #Valeur attendue du forward
         forward_value = node.price * exp(self.market.rate * self.time_delta) - self.market.dividende
-
         while True:
             #On cherche vers le bas
             if direction == "down":
@@ -135,7 +125,6 @@ class Tree():
             else:
                 next_price = candidate_mid.price * self.alpha
                 condition = forward_value < (candidate_mid.price + next_price) / 2
-            
             #Si le candidat est le plus proche du forward on arrête la boucle
             if condition:
                 return candidate_mid
@@ -167,13 +156,10 @@ class Tree():
         #Si pas de prunning : on créer le noeud down fils et on calcule les proba
         if node.node_proba > self.prunning_value :
             node.next_up = Node(price = node.next_mid.price * self.alpha)
-
             #Calcul des proba de transition
             node.compute_transition_proba(self.alpha, self.time_delta, self.market, is_div, self.market.dividende)
-
             #Calcul des proba d'existance des noeuds fils
             node.update_proba()
-
             node.next_up.down_node = node.next_mid
             node.next_mid.up_node = node.next_up
             
@@ -235,10 +221,8 @@ class Tree():
         Pricer l'option avec l'arbre par mouvement backward
         '''
         last_node = self.last_node
-
         #Calcul du payoff de la dernière colonne
         self._compute_final_payoff(last_node)
-
         step = self.nb_steps - 1
         trunc_node = last_node.prec_node
 
