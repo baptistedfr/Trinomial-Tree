@@ -1,7 +1,6 @@
 from datetime import datetime
 import time
 import numpy as np
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 from PythonFiles.options import Option, EuropeanCallOption, EuropeanPutOption, AmericanCallOption, AmericanPutOption, BermudeanCallOption, BermudeanPutOption, DigitalCallOption, DigitalPutOption
 from PythonFiles.visualisation import visualize_tree, plot_price_convergence, plot_execution_time, plot_gap, plot_gap_step
