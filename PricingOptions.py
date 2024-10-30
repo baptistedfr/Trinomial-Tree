@@ -85,7 +85,7 @@ def python_tree_memory_price():
         return
     
     nb_steps: int = int(sheet_pricer.range('INbSteps').value)
-    prunning : float = sheet_pricer.range('IPrunning').value
+    prunning : float = sheet_pricer.range('IPrunningTreshold').value
     price, timer = price_tree_memory(mkt,option,nb_steps  , prunning)
     
     sheet_pricer.range('IPythonPriceTreeMemory').value = price

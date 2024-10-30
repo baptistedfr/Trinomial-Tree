@@ -111,6 +111,6 @@ def make_tree_from_input(sheet, mkt:Market, opt:Option, nb_steps:int = 0) -> Tre
     '''
     if(nb_steps==0):
         nb_steps: int = int(sheet.range('INbSteps').value)
-    prunning : float = sheet.range('IPrunning').value
+    prunning : float = sheet.range('IPrunningTreshold').value
     return Tree(option = opt, market = mkt, nb_steps = nb_steps, prunning_value = prunning)
 
