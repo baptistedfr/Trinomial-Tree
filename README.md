@@ -12,5 +12,7 @@ Le projet consiste à développer un pricer d'options via un arbre trinomial, av
 - Scripts Python : dans le dossier `PythonFiles`.
 - Fichier Excel (VBA) : `PricingOptions.xlsm`.
 
+Une interface streamlit est disponible sous app.py et l'interface excel est situé dans le fichier `PricingOptions.xlsm`.
+
 ## Visualisations et Études de Convergence
-De nombreux graphiques ont été réalisés pour illustrer l'arbre trinomial et étudier la convergence des résultats.
+De nombreux graphiques ont été réalisés pour illustrer l'arbre trinomial et étudier la convergence des résultats. Tous les graphiques sont visibles et disponibles sous le fichier excel.
