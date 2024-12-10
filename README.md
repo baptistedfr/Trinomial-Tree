@@ -5,6 +5,7 @@ Projet de groupe réalisé par : DUFOUR Baptiste & CHARBONNIER Thibault.
 Le projet consiste à développer un pricer d'options via un arbre trinomial, avec les fonctionnalités suivantes :
 - Pricing d'options européennes, américaines, bermudiennes et digitales.
 - Prise en compte du versement de dividendes sur le sous-jacent.
+- Intégration du prunning permettant une convergence plus rapide.
 - Création d'une interface graphique en Python et VBA.
 - Intégration de Python avec Excel via **xlwings**.
 
